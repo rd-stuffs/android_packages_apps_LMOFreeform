@@ -1,24 +1,24 @@
 package io.sunshine0523.freeform.service;
 
+import android.app.ActivityThread;
+import android.app.IApplicationThread;
 import android.annotation.SuppressLint;
 import android.app.ActivityOptions;
-import android.app.ActivityOptionsHidden;
 import android.app.PendingIntent;
-import android.app.PendingIntentHidden;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.os.RemoteException;
 import android.os.SystemClock;
-import android.os.UserHandleHidden;
+import android.os.UserHandle;
 import android.view.InputDevice;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.Surface;
 
-import dev.rikka.tools.refine.Refine;
 import io.sunshine0523.freeform.IMiFreeformDisplayCallback;
 import io.sunshine0523.freeform.ui.freeform.AppConfig;
 import io.sunshine0523.freeform.ui.freeform.FreeformConfig;
@@ -72,12 +72,14 @@ public class MiFreeformServiceHolder {
             intent.addCategory(Intent.CATEGORY_LAUNCHER);
             ActivityOptions activityOptions = ActivityOptions.makeBasic();
             activityOptions.setLaunchDisplayId(displayId);
-            ActivityOptionsHidden activityOptionsHidden = Refine.unsafeCast(activityOptions);
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                activityOptionsHidden.setCallerDisplayId(displayId);
-            }
-            Context.class.getMethod("startActivityAsUser", Intent.class, Bundle.class, UserHandleHidden.class)
-                    .invoke(context, intent, activityOptions.toBundle(), new UserHandleHidden(appConfig.getUserId()));
+            // ActivityOptions activityOptionsHidden = Refine.unsafeCast(activityOptions);
+            // if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                // activityOptionsHidden.setCallerDisplayId(displayId);
+            // }
+            activityOptions.setCallerDisplayId(displayId);
+            // Context.class.getMethod("startActivityAsUser", Intent.class, Bundle.class, UserHandle.class)
+            //         .invoke(context, intent, activityOptions.toBundle(), new UserHandle(appConfig.getUserId()));
+            context.startActivityAsUser(intent, activityOptions.toBundle(), new UserHandle(appConfig.getUserId()));
             return true;
         } catch (Exception e) {
             MLog.e(TAG, "startApp failed", e);
@@ -86,23 +88,32 @@ public class MiFreeformServiceHolder {
     }
 
     public static void startPendingIntent(PendingIntent pendingIntent, int displayId) {
-        PendingIntentHidden pendingIntentHidden = Refine.unsafeCast(pendingIntent);
+        // PendingIntent pendingIntentHidden = Refine.unsafeCast(pendingIntent);
         ActivityOptions activityOptions = ActivityOptions.makeBasic();
         activityOptions.setLaunchDisplayId(displayId);
-        ActivityOptionsHidden activityOptionsHidden = Refine.unsafeCast(activityOptions);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            activityOptionsHidden.setCallerDisplayId(displayId);
+        // ActivityOptions activityOptionsHidden = Refine.unsafeCast(activityOptions);
+        // if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        //     activityOptionsHidden.setCallerDisplayId(displayId);
+        // }
+        activityOptions.setCallerDisplayId(displayId);
+
+        final IApplicationThread app = ActivityThread.currentActivityThread()
+                    .getApplicationThread();
+        try {
+            SystemServiceHolder.activityManager.sendIntentSender(
+                    app,
+                    pendingIntent.getTarget(),
+                    pendingIntent.getWhitelistToken(),
+                    0,
+                    null,
+                    null,
+                    null,
+                    null,
+                    activityOptions.toBundle()
+            );
+        } catch (RemoteException e) {
+            MLog.e(TAG, "startPendingIntent failed!", e);
         }
-        SystemServiceHolder.activityManager.sendIntentSender(
-                pendingIntentHidden.getTarget(),
-                pendingIntentHidden.getWhitelistToken(),
-                0,
-                null,
-                null,
-                null,
-                null,
-                activityOptionsHidden.toBundle()
-        );
     }
 
     public static void touch(MotionEvent event, int displayId) {

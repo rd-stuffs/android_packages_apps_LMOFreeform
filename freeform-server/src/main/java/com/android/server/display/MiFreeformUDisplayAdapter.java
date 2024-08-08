@@ -5,7 +5,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.util.Log;
-import android.view.DisplayShapeHidden;
+import android.view.DisplayShape;
 import android.view.Surface;
 
 import io.sunshine0523.freeform.IMiFreeformDisplayCallback;
@@ -94,7 +94,7 @@ public final class MiFreeformUDisplayAdapter extends MiFreeformDisplayAdapter {
         @Override
         public DisplayDeviceInfo getDisplayDeviceInfoLocked() {
             super.getDisplayDeviceInfoLocked();
-            mInfo.displayShape = DisplayShapeHidden.createDefaultDisplayShape(mInfo.width, mInfo.height, false);
+            mInfo.displayShape = DisplayShape.createDefaultDisplayShape(mInfo.width, mInfo.height, false);
 
             return mInfo;
         }

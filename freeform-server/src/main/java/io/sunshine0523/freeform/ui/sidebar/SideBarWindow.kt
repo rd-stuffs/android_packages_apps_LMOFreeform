@@ -9,7 +9,6 @@ import android.view.Display
 import android.view.IRotationWatcher
 import android.view.View
 import android.view.WindowManager
-import android.view.WindowManagerHidden
 import io.sunshine0523.freeform.service.SystemServiceHolder
 import io.sunshine0523.freeform.util.MLog
 /**
@@ -21,8 +20,8 @@ class SideBarWindow(
     val uiHandler: Handler
 ) : IRotationWatcher.Stub() {
     private val windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
-    private val leftWindowParams = WindowManagerHidden.LayoutParams()
-    private val rightWindowParams = WindowManagerHidden.LayoutParams()
+    private val leftWindowParams = WindowManager.LayoutParams()
+    private val rightWindowParams = WindowManager.LayoutParams()
     lateinit var leftView: View
     lateinit var rightView: View
 
@@ -60,7 +59,7 @@ class SideBarWindow(
                         WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
                         WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS or
                         WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED
-                privateFlags = WindowManagerHidden.LayoutParams.SYSTEM_FLAG_SHOW_FOR_ALL_USERS or WindowManagerHidden.LayoutParams.PRIVATE_FLAG_IS_ROUNDED_CORNERS_OVERLAY or WindowManagerHidden.LayoutParams.PRIVATE_FLAG_USE_BLAST or WindowManagerHidden.LayoutParams.PRIVATE_FLAG_TRUSTED_OVERLAY
+                privateFlags = WindowManager.LayoutParams.SYSTEM_FLAG_SHOW_FOR_ALL_USERS or WindowManager.LayoutParams.PRIVATE_FLAG_IS_ROUNDED_CORNERS_OVERLAY or WindowManager.LayoutParams.PRIVATE_FLAG_USE_BLAST or WindowManager.LayoutParams.PRIVATE_FLAG_TRUSTED_OVERLAY
                 format = PixelFormat.RGBA_8888
             }
             rightWindowParams.apply {
@@ -73,7 +72,7 @@ class SideBarWindow(
                         WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
                         WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS or
                         WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED
-                privateFlags = WindowManagerHidden.LayoutParams.SYSTEM_FLAG_SHOW_FOR_ALL_USERS or WindowManagerHidden.LayoutParams.PRIVATE_FLAG_IS_ROUNDED_CORNERS_OVERLAY or WindowManagerHidden.LayoutParams.PRIVATE_FLAG_USE_BLAST or WindowManagerHidden.LayoutParams.PRIVATE_FLAG_TRUSTED_OVERLAY
+                privateFlags = WindowManager.LayoutParams.SYSTEM_FLAG_SHOW_FOR_ALL_USERS or WindowManager.LayoutParams.PRIVATE_FLAG_IS_ROUNDED_CORNERS_OVERLAY or WindowManager.LayoutParams.PRIVATE_FLAG_USE_BLAST or WindowManager.LayoutParams.PRIVATE_FLAG_TRUSTED_OVERLAY
                 format = PixelFormat.RGBA_8888
             }
             uiHandler.post {

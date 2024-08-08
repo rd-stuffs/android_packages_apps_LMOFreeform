@@ -1,5 +1,6 @@
 package io.sunshine0523.freeform;
 
+import android.app.PendingIntent;
 import android.content.ComponentName;
 import android.view.InputEvent;
 import android.view.Surface;

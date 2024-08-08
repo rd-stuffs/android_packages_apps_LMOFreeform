@@ -1,0 +1,38 @@
+//
+// Copyright (C) 2024 The LibreMobileOS Foundation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+
+filegroup {
+    name: "mifreeform-display-adapter-java",
+    srcs: [
+        "java/com/android/server/display/MiFreeformDisplayAdapter.java",
+        "java/com/android/server/display/MiFreeformUDisplayAdapter.java",
+    ],
+    visibility: ["//frameworks/base/services/core"],
+}
+
+java_library_static {
+    name: "mifreeform-server",
+    libs: ["services.core"],
+    static_libs: [
+        "androidx.core_core-ktx",
+        "gson",
+    ],
+    srcs: [
+        "java/io/sunshine0523/freeform/**/*.java",
+        "java/io/sunshine0523/freeform/**/*.kt",
+    ],
+    exclude_srcs: ["java/io/sunshine0523/freeform/ZygoteMain.java"],
+}

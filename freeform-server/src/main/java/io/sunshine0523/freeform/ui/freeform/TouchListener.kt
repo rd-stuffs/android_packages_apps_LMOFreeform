@@ -57,22 +57,22 @@ class LeftViewLongClickListener(private val window: FreeformWindow): View.OnLong
     }
     override fun onLongClick(v: View): Boolean {
         if (null != window.freeformTaskStackListener) {
-            when {
-                Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
+            // when {
+                // Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
                     if (window.freeformTaskStackListener!!.taskId == -1) {
                         MLog.e(TAG, "taskId is -1, can`t move")
                         return true
                     }
                     runCatching { SystemServiceHolder.activityTaskManager.moveRootTaskToDisplay(window.freeformTaskStackListener!!.taskId, Display.DEFAULT_DISPLAY) }
-                }
-                Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q -> {
-                    if (window.freeformTaskStackListener!!.stackId == -1) {
-                        MLog.e(TAG, "stackId is -1, can`t move")
-                        return true
-                    }
-                    runCatching { SystemServiceHolder.activityTaskManager.moveStackToDisplay(window.freeformTaskStackListener!!.stackId, Display.DEFAULT_DISPLAY) }
-                }
-            }
+                // }
+                // Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q -> {
+                //     if (window.freeformTaskStackListener!!.stackId == -1) {
+                //         MLog.e(TAG, "stackId is -1, can`t move")
+                //         return true
+                //     }
+                //     runCatching { SystemServiceHolder.activityTaskManager.moveStackToDisplay(window.freeformTaskStackListener!!.stackId, Display.DEFAULT_DISPLAY) }
+                // }
+            // }
         }
         window.destroy("LeftViewLongClickListener", false)
         return true

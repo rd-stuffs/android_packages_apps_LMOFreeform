@@ -7,13 +7,13 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.ComponentName;
 import android.content.Context;
+import android.hardware.display.DisplayManagerInternal;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.RemoteException;
 import android.os.ServiceManager;
 import android.util.ArrayMap;
 import android.view.Surface;
-
-import com.android.server.display.MiFreeformDisplayAdapter;
 
 import java.util.Map;
 
@@ -30,22 +30,22 @@ public class MiFreeformUIService extends IMiFreeformUIService.Stub {
     private static final String TAG = "Mi-Freeform/MiFreeformUIService";
 
     private Context systemContext = null;
-    private MiFreeformDisplayAdapter miFreeformDisplayAdapter = null;
+    private DisplayManagerInternal displayManager = null;
     private MiFreeformService miFreeformService = null;
-    private Handler uiHandler = null;
-    private Handler handler = null;
+    // private Handler uiHandler = null;
+    private Handler handler = new Handler();
     private Settings settings;
     //private SideBarService sideBarService;
     private FreeformNotificationListener notificationListener;
 
-    public MiFreeformUIService(Context context, MiFreeformDisplayAdapter miFreeformDisplayAdapter, MiFreeformService miFreeformService, Handler uiHandler, Handler handler) {
-        if (null == context || null == miFreeformDisplayAdapter || null == miFreeformService || null == uiHandler || null == handler) return;
+    public MiFreeformUIService(Context context, DisplayManagerInternal displayManager, MiFreeformService miFreeformService) {
+        if (null == context || null == displayManager || null == miFreeformService) return;
 
         this.systemContext = context;
-        this.miFreeformDisplayAdapter = miFreeformDisplayAdapter;
+        this.displayManager = displayManager;
         this.miFreeformService = miFreeformService;
-        this.uiHandler = uiHandler;
-        this.handler = handler;
+        // this.uiHandler = displayManager.getUiHandler();
+        // this.handler = displayManager.getHandler();
         this.settings = DataHelper.INSTANCE.getSettings();
 
         SystemServiceHolder.init(() -> {
@@ -90,7 +90,7 @@ public class MiFreeformUIService extends IMiFreeformUIService.Stub {
             boolean secure, boolean ownContentOnly, boolean shouldShowSystemDecorations,
             Surface surface, IMiFreeformDisplayCallback callback
     ) {
-        miFreeformDisplayAdapter.createFreeformLocked(
+        displayManager.createFreeformLocked(
                 name, callback,
                 width, height, densityDpi,
                 secure, ownContentOnly, shouldShowSystemDecorations,
@@ -100,12 +100,12 @@ public class MiFreeformUIService extends IMiFreeformUIService.Stub {
 
     @Override
     public void resizeFreeform(IBinder appToken, int width, int height, int densityDpi) {
-        miFreeformDisplayAdapter.resizeFreeform(appToken, width, height, densityDpi);
+        displayManager.resizeFreeform(appToken, width, height, densityDpi);
     }
 
     @Override
     public void releaseFreeform(IBinder appToken) {
-        miFreeformDisplayAdapter.releaseFreeform(appToken);
+        displayManager.releaseFreeform(appToken);
     }
 
     @Override
@@ -140,12 +140,24 @@ public class MiFreeformUIService extends IMiFreeformUIService.Stub {
 
     @Override
     public void collapseStatusBar() {
-        handler.post(() -> SystemServiceHolder.statusBarService.collapsePanels());
+        handler.post(() -> {
+            try {
+                SystemServiceHolder.statusBarService.collapsePanels();
+            } catch (RemoteException e) {
+                MLog.e(TAG, "collapseStatusBar failed", e);
+            }
+        });
     }
 
     @Override
     public void cancelNotification(String key) {
-        handler.post(() -> SystemServiceHolder.notificationManager.cancelNotificationsFromListener(notificationListener, new String[]{key}));
+        handler.post(() -> {
+            try {
+                SystemServiceHolder.notificationManager.cancelNotificationsFromListener(notificationListener, new String[]{key});
+            } catch (RemoteException e) {
+                MLog.e(TAG, "cancelNotification failed", e);
+            }
+        });
     }
 
     private void initNotificationListener() {

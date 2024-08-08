@@ -27,10 +27,10 @@ public class SystemServiceHolder {
 
     static void init(ServiceCallback callback) {
         new Thread(() -> {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            // if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 waitSystemService("activity_task");
                 activityTaskManager = IActivityTaskManager.Stub.asInterface(ServiceManager.getService("activity_task"));
-            }
+            // }
             waitSystemService("activity");
             waitSystemService("input");
             waitSystemService("window");

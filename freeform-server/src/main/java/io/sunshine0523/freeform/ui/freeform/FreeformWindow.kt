@@ -99,11 +99,11 @@ class FreeformWindow(
         handler.post {
             this.displayId = displayId
             freeformTaskStackListener = FreeformTaskStackListener(displayId, this)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            // if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 SystemServiceHolder.activityTaskManager.registerTaskStackListener(freeformTaskStackListener)
-            } else {
-                SystemServiceHolder.activityManager.registerTaskStackListener(freeformTaskStackListener)
-            }
+            // } else {
+            //     SystemServiceHolder.activityManager.registerTaskStackListener(freeformTaskStackListener)
+            // }
             // pendingIntent
             if (appConfig.userId == -100) {
                 if (appConfig.pendingIntent == null) destroy("onDisplayAdd:userId=-100, but pendingIntent is null", false)
@@ -341,11 +341,11 @@ class FreeformWindow(
             runCatching { windowManager.removeViewImmediate(freeformLayout) }.onFailure { exception -> Log.e(TAG, "removeView failed $exception") }
         }
         if (removeTask) runCatching {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            // if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 SystemServiceHolder.activityTaskManager.removeTask(freeformTaskStackListener!!.taskId)
-            } else {
-                SystemServiceHolder.activityManager.removeTask(freeformTaskStackListener!!.taskId)
-            }
+            // } else {
+            //     SystemServiceHolder.activityManager.removeTask(freeformTaskStackListener!!.taskId)
+            // }
             freeformTaskStackListener?.listenTaskRemoved = true
         }.onFailure { exception ->
             MLog.e(TAG, "removeTask failed $exception")

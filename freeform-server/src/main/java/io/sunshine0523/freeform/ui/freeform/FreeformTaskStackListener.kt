@@ -1,7 +1,6 @@
 package io.sunshine0523.freeform.ui.freeform
 
 import android.app.ActivityManager
-import android.app.ActivityManagerHidden
 import android.app.ITaskStackListener
 import android.content.ComponentName
 import android.os.Build
@@ -23,7 +22,7 @@ class FreeformTaskStackListener(
 
     var taskId = -1
     //For A10, A11
-    var stackId = -1
+    // var stackId = -1
     // if true, listen taskRemoved
     var listenTaskRemoved = false
 
@@ -64,10 +63,6 @@ class FreeformTaskStackListener(
 
     }
 
-    override fun onActivityLaunchOnSecondaryDisplayFailed() {
-
-    }
-
     override fun onActivityLaunchOnSecondaryDisplayFailed(
         taskInfo: ActivityManager.RunningTaskInfo?,
         requestedDisplayId: Int
@@ -89,105 +84,117 @@ class FreeformTaskStackListener(
     override fun onTaskRemoved(taskId: Int) {
         if (listenTaskRemoved) {
             MLog.i(TAG, "onTaskRemoved $taskId")
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            // if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 SystemServiceHolder.activityTaskManager.unregisterTaskStackListener(this)
-            } else {
-                SystemServiceHolder.activityManager.unregisterTaskStackListener(this)
-            }
+            // } else {
+                // SystemServiceHolder.activityManager.unregisterTaskStackListener(this)
+            // }
             MiFreeformServiceHolder.releaseFreeform(window)
         }
     }
 
-    override fun onTaskMovedToFront(taskId: Int) {
-        Log.i(TAG, "onTaskMovedToFront $taskId")
-    }
+    // override fun onTaskMovedToFront(taskId: Int) {
+    //     Log.i(TAG, "onTaskMovedToFront $taskId")
+    // }
 
     override fun onTaskMovedToFront(taskInfo: ActivityManager.RunningTaskInfo?) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            if (taskInfo != null) {
-                val displayId = taskInfo::class.java.getField("displayId").get(taskInfo) as Int
-                if (this.displayId == displayId) {
-                    taskId = taskInfo.taskId
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                        if (FreeformWindowManager.settings.showImeInFreeform) {
-                            SystemServiceHolder.windowManager.setDisplayImePolicy(displayId, 0)
-                        }
-//                        else {
-//                            SystemServiceHolder.windowManager.setDisplayImePolicy(displayId, 1)
-//                        }
-                    }
-                    MLog.i(TAG, "onTaskMovedToFront $taskInfo")
-                }
+        val displayId = taskInfo?.displayId ?: return
+        if (this.displayId == displayId) {
+            if (FreeformWindowManager.settings.showImeInFreeform) {
+                SystemServiceHolder.windowManager.setDisplayImePolicy(displayId, 0)
             }
         }
+//         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+//             if (taskInfo != null) {
+//                 val displayId = taskInfo::class.java.getField("displayId").get(taskInfo) as Int
+//                 if (this.displayId == displayId) {
+//                     taskId = taskInfo.taskId
+//                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+//                         if (FreeformWindowManager.settings.showImeInFreeform) {
+//                             SystemServiceHolder.windowManager.setDisplayImePolicy(displayId, 0)
+//                         }
+// //                        else {
+// //                            SystemServiceHolder.windowManager.setDisplayImePolicy(displayId, 1)
+// //                        }
+//                     }
+//                     MLog.i(TAG, "onTaskMovedToFront $taskInfo")
+//                 }
+//             }
+//         }
     }
 
-    override fun onTaskDescriptionChanged(taskId: Int, td: ActivityManager.TaskDescription?) {
-        Log.i(TAG, "onTaskDescriptionChanged $taskId $td")
-    }
+    // override fun onTaskDescriptionChanged(taskId: Int, td: ActivityManager.TaskDescription?) {
+    //     Log.i(TAG, "onTaskDescriptionChanged $taskId $td")
+    // }
 
     override fun onTaskDescriptionChanged(taskInfo: ActivityManager.RunningTaskInfo?) {
-        when {
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-                if (taskInfo != null) {
-                    val displayId = taskInfo::class.java.getField("displayId").get(taskInfo) as Int
-                    if (this.displayId == displayId) {
-                        taskId = taskInfo.taskId
-                        MLog.i(TAG, "onTaskDescriptionChanged $taskInfo")
-                    }
-                }
-            }
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q -> {
-                if (taskInfo != null) {
-                    val displayId = taskInfo::class.java.getField("displayId").get(taskInfo) as Int
-                    val stackId = taskInfo::class.java.getField("stackId").get(taskInfo) as Int
-                    if (this.taskId == taskInfo.taskId && displayId != this.displayId) {
-                        window.destroy("onTaskDescriptionChanged: display!=this.display", false)
-                    }
-                    if (this.displayId == displayId) {
-                        this.taskId = taskInfo.taskId
-                        this.stackId = stackId
-                        MLog.i(TAG, "onTaskDescriptionChanged $taskInfo")
-                    }
-                }
-            }
+        val displayId = taskInfo?.displayId ?: return
+        if (this.displayId == displayId) {
+            taskId = taskInfo.taskId
+            // MLog.i(TAG, "onTaskDescriptionChanged $taskInfo")
         }
+        // when {
+        //     Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
+        //         if (taskInfo != null) {
+        //             val displayId = taskInfo::class.java.getField("displayId").get(taskInfo) as Int
+        //             if (this.displayId == displayId) {
+        //                 taskId = taskInfo.taskId
+        //                 MLog.i(TAG, "onTaskDescriptionChanged $taskInfo")
+        //             }
+        //         }
+        //     }
+        //     Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q -> {
+        //         if (taskInfo != null) {
+        //             val displayId = taskInfo::class.java.getField("displayId").get(taskInfo) as Int
+        //             val stackId = taskInfo::class.java.getField("stackId").get(taskInfo) as Int
+        //             if (this.taskId == taskInfo.taskId && displayId != this.displayId) {
+        //                 window.destroy("onTaskDescriptionChanged: display!=this.display", false)
+        //             }
+        //             if (this.displayId == displayId) {
+        //                 this.taskId = taskInfo.taskId
+        //                 this.stackId = stackId
+        //                 MLog.i(TAG, "onTaskDescriptionChanged $taskInfo")
+        //             }
+        //         }
+        //     }
+        // }
     }
 
     override fun onActivityRequestedOrientationChanged(taskId: Int, requestedOrientation: Int) {
-        Log.i(TAG, "onActivityRequestedOrientationChanged $taskId $requestedOrientation")
+        // Log.i(TAG, "onActivityRequestedOrientationChanged $taskId $requestedOrientation")
     }
 
-    override fun onTaskRemovalStarted(taskId: Int) {
+    // override fun onTaskRemovalStarted(taskId: Int) {
+    //     Log.i(TAG, "onTaskRemovalStarted")
+    //     if (this.taskId == taskId) {
+    //         window.destroy("onTaskRemovalStarted", false)
+    //     }
+    // }
+
+    // @RequiresApi(Build.VERSION_CODES.Q)
+    override fun onTaskRemovalStarted(taskInfo: ActivityManager.RunningTaskInfo?) {
+        val taskId = taskInfo?.taskId ?: return
         Log.i(TAG, "onTaskRemovalStarted")
         if (this.taskId == taskId) {
             window.destroy("onTaskRemovalStarted", false)
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.Q)
-    override fun onTaskRemovalStarted(taskInfo: ActivityManager.RunningTaskInfo?) {
-        Log.i(TAG, "onTaskRemovalStarted")
-        if (this.taskId == taskInfo?.taskId) {
-            window.destroy("onTaskRemovalStarted", false)
-        }
-    }
+    // override fun onTaskProfileLocked(taskId: Int, userId: Int) {
 
-    override fun onTaskProfileLocked(taskId: Int, userId: Int) {
+    // }
+
+    override fun onTaskProfileLocked(taskInfo: ActivityManager.RunningTaskInfo, userId: Int) {
 
     }
 
-    override fun onTaskProfileLocked(taskInfo: ActivityManager.RunningTaskInfo?) {
+    override fun onTaskSnapshotChanged(taskId: Int, snapshot: TaskSnapshot) {
 
     }
 
-    override fun onTaskSnapshotChanged(taskId: Int, snapshot: ActivityManagerHidden.TaskSnapshot?) {
+    // override fun onTaskSnapshotChanged(taskId: Int, snapshot: TaskSnapshot?) {
 
-    }
-
-    override fun onTaskSnapshotChanged(taskId: Int, snapshot: TaskSnapshot?) {
-
-    }
+    // }
 
     override fun onBackPressedOnTaskRoot(taskInfo: ActivityManager.RunningTaskInfo?) {
 
