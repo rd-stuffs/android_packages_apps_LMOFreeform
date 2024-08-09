@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<rikka.material.widget.AppBarLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.google.android.material.appbar.AppBarLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/toolbar_container"
-    style="?appBarStyle"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:fitsSystemWindows="true"
@@ -25,4 +25,4 @@
         app:titleTextAppearance="@android:style/TextAppearance.Material.Widget.Toolbar.Title"
         tools:text="Title" />
 
-</rikka.material.widget.AppBarLayout>
+</com.google.android.material.appbar.AppBarLayout>

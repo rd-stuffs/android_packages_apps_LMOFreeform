@@ -15,15 +15,6 @@
 //
 
 filegroup {
-    name: "mifreeform_display_aidl",
-    srcs: [
-        "aidl/io/sunshine0523/freeform/IMiFreeformDisplayCallback.aidl",
-    ],
-    path: "aidl",
-    visibility: ["//frameworks/base"],
-}
-
-filegroup {
     name: "mifreeform_aidl",
     srcs: ["aidl/**/*.aidl"],
     path: "aidl",

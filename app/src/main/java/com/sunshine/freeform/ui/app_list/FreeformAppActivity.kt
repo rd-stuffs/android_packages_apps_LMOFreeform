@@ -41,7 +41,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
-import com.google.accompanist.drawablepainter.rememberDrawablePainter
+import com.android.settingslib.spa.framework.compose.rememberDrawablePainter
 import com.sunshine.freeform.R
 import com.sunshine.freeform.service.ServiceViewModel
 import com.sunshine.freeform.ui.theme.MiFreeformTheme

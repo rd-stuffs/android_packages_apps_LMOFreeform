@@ -7,6 +7,8 @@ import android.view.Surface;
 import android.os.IBinder;
 import io.sunshine0523.freeform.IMiFreeformDisplayCallback;
 
+/** {@hide} */
+@PermissionManuallyEnforced
 interface IMiFreeformUIService {
     // start freeform in system
     void startAppInFreeform(String packageName, String activityName, int userId, in PendingIntent pendingIntent,

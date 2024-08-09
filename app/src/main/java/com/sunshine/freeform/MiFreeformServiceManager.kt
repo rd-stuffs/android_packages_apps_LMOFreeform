@@ -8,7 +8,7 @@ import android.util.Log
 import com.google.gson.Gson
 import com.sunshine.freeform.ui.main.RemoteSettings
 import io.sunshine0523.freeform.IMiFreeformUIService
-import org.lsposed.hiddenapibypass.HiddenApiBypass
+// import org.lsposed.hiddenapibypass.HiddenApiBypass
 import java.util.Date
 
 object MiFreeformServiceManager {
@@ -17,27 +17,35 @@ object MiFreeformServiceManager {
     private val gson = Gson()
 
     fun init() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-            try {
-                val serviceManager = Class.forName("android.os.ServiceManager")
-                val r = HiddenApiBypass.invoke(serviceManager, null, "getService", "mi_freeform") as IBinder
-                Log.i(TAG, "mfs $r")
-                iMiFreeformService = IMiFreeformUIService.Stub.asInterface(r)
-                iMiFreeformService?.ping()
-            } catch (e: Exception) {
-                Log.e(TAG, "$e")
-                e.printStackTrace()
-            }
-        } else {
-            try {
-                val r = ServiceManager.getService("mi_freeform")
-                Log.i(TAG, "mfs $r")
-                iMiFreeformService = IMiFreeformUIService.Stub.asInterface(r)
-                iMiFreeformService?.ping()
-            } catch (e: Exception) {
-                Log.e(TAG, "$e")
-                e.printStackTrace()
-            }
+        // if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+        //     try {
+        //         val serviceManager = Class.forName("android.os.ServiceManager")
+        //         val r = HiddenApiBypass.invoke(serviceManager, null, "getService", "mi_freeform") as IBinder
+        //         Log.i(TAG, "mfs $r")
+        //         iMiFreeformService = IMiFreeformUIService.Stub.asInterface(r)
+        //         iMiFreeformService?.ping()
+        //     } catch (e: Exception) {
+        //         Log.e(TAG, "$e")
+        //         e.printStackTrace()
+        //     }
+        // } else {
+        //     try {
+        //         val r = ServiceManager.getService("mi_freeform")
+        //         Log.i(TAG, "mfs $r")
+        //         iMiFreeformService = IMiFreeformUIService.Stub.asInterface(r)
+        //         iMiFreeformService?.ping()
+        //     } catch (e: Exception) {
+        //         Log.e(TAG, "$e")
+        //         e.printStackTrace()
+        //     }
+        // }
+        try {
+            val r = ServiceManager.getService("mi_freeform")
+            iMiFreeformService = IMiFreeformUIService.Stub.asInterface(r)
+            iMiFreeformService?.ping()
+        } catch (e: Exception) {
+            Log.e(TAG, "$e")
+            e.printStackTrace()
         }
     }
 

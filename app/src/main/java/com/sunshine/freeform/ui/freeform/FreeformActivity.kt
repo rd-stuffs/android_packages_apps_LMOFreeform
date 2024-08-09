@@ -24,9 +24,9 @@ class FreeformActivity : AppCompatActivity() {
 
         val key = intent?.getStringExtra("key")
         val isClearable = intent?.getBooleanExtra("isClearable", false) ?: false
-        val pendingIntent =
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) intent?.getParcelableExtra("pendingIntent", PendingIntent::class.java)
-            else intent?.getParcelableExtra("pendingIntent") as PendingIntent?
+        val pendingIntent = intent?.getParcelableExtra("pendingIntent", PendingIntent::class.java)
+            // if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) intent?.getParcelableExtra("pendingIntent", PendingIntent::class.java)
+            // else intent?.getParcelableExtra("pendingIntent") as PendingIntent?
         Log.i("Mi-Freeform", "$key $isClearable $pendingIntent ${pendingIntent?.creatorPackage}")
         MiFreeformServiceManager.createWindow(
             pendingIntent,
