@@ -10,7 +10,6 @@ import android.graphics.PixelFormat
 import android.os.IBinder
 import android.view.View
 import android.view.WindowManager
-import android.view.WindowManagerHidden
 import android.widget.Toast
 import androidx.appcompat.content.res.AppCompatResources
 import io.sunshine0523.sidebar.R
@@ -30,7 +29,7 @@ class SidebarService : Service(), SharedPreferences.OnSharedPreferenceChangeList
     private var sidelinePositionY = 0
     private var screenWidth = 0
     private var screenHeight = 0
-    private val layoutParams = WindowManagerHidden.LayoutParams()
+    private val layoutParams = WindowManager.LayoutParams()
 
     companion object {
         private const val TAG = "SidebarService"
@@ -172,7 +171,7 @@ class SidebarService : Service(), SharedPreferences.OnSharedPreferenceChangeList
                         WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
                         WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS or
                         WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED
-                privateFlags = WindowManagerHidden.LayoutParams.SYSTEM_FLAG_SHOW_FOR_ALL_USERS or WindowManagerHidden.LayoutParams.PRIVATE_FLAG_IS_ROUNDED_CORNERS_OVERLAY or WindowManagerHidden.LayoutParams.PRIVATE_FLAG_USE_BLAST or WindowManagerHidden.LayoutParams.PRIVATE_FLAG_TRUSTED_OVERLAY
+                privateFlags = WindowManager.LayoutParams.SYSTEM_FLAG_SHOW_FOR_ALL_USERS or WindowManager.LayoutParams.PRIVATE_FLAG_IS_ROUNDED_CORNERS_OVERLAY or WindowManager.LayoutParams.PRIVATE_FLAG_USE_BLAST or WindowManager.LayoutParams.PRIVATE_FLAG_TRUSTED_OVERLAY
                 format = PixelFormat.RGBA_8888
                 windowAnimations = android.R.style.Animation_Dialog
             }

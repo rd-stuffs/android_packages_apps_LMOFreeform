@@ -16,7 +16,7 @@ import io.sunshine0523.sidebar.utils.Logger
  */
 class AllAppActivity: ComponentActivity() {
     private val logger = Logger(TAG)
-    private lateinit var viewModel: AllAppViewModel
+    private val viewModel by lazy  { AllAppViewModel(application) }
 
     companion object {
         private const val PACKAGE = "com.sunshine.freeform"
@@ -26,17 +26,22 @@ class AllAppActivity: ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        viewModel = AllAppViewModel(application)
+        logger.d("onCreate")
 
         setContent {
             SidebarTheme {
                 AllAppGridView(
                     viewModel = viewModel,
-                    onClick = { appInfo -> onClick(appInfo) },
+                    onClick = ::onClick,
                     modifier = Modifier.fillMaxSize()
                 )
             }
         }
+    }
+
+    override fun onDestroy() {
+        logger.d("onDestroy")
+        super.onDestroy()
     }
 
     private fun onClick(appInfo: AppInfo) {

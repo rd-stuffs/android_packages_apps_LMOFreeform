@@ -15,13 +15,16 @@
 //
 
 android_app {
-    name: "MiFreeform",
+    name: "MiFreeformSidebar",
     srcs: [
         "java/**/*.kt",
+        // "java/**/*.java",
     ],
     exclude_srcs: [
-        "java/com/sunshine/freeform/hook/utils/XLog.kt",
-        "java/com/sunshine/freeform/ui/ProcessSurfaceView.kt",
+        "java/io/sunshine0523/sidebar/hook/*.kt",
+        "java/io/sunshine0523/sidebar/ui/main/*.kt",
+        // TODO redo in compose
+        "java/io/sunshine0523/sidebar/ui/sidebar/*.kt",
     ],
     resource_dirs: ["res"],
     certificate: "platform",
@@ -29,7 +32,7 @@ android_app {
     system_ext_specific: true,
     privileged: true,
     static_libs: [
-        "PlatformComposeCore",
+        // "PlatformComposeCore",
         "SpaLib",
         "androidx-constraintlayout_constraintlayout",
         "androidx.activity_activity-compose",
@@ -38,10 +41,18 @@ android_app {
         "androidx.compose.runtime_runtime",
         "androidx.compose.runtime_runtime-livedata",
         "androidx.core_core-ktx",
+        "androidx.preference_preference",
         "androidx.room_room-ktx",
         "com.google.android.material_material",
-        "glide-prebuilt",
-        "gson",
     ],
     plugins: ["androidx.room_room-compiler-plugin"],
+    required: ["privapp_allowlist_io_sunshine0523_sidebar"],
+}
+
+prebuilt_etc {
+    name: "privapp_allowlist_io_sunshine0523_sidebar",
+    system_ext_specific: true,
+    src: "privapp_allowlist_io_sunshine0523_sidebar.xml",
+    sub_dir: "permissions",
+    filename_from_src: true,
 }

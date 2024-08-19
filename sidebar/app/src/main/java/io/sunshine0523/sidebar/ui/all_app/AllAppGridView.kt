@@ -20,7 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.google.accompanist.drawablepainter.rememberDrawablePainter
+import com.android.settingslib.spa.framework.compose.rememberDrawablePainter
 import io.sunshine0523.sidebar.bean.AppInfo
 
 @Composable
