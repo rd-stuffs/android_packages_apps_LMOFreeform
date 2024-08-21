@@ -8,87 +8,12 @@
         android:name="android.permission.QUERY_ALL_PACKAGES"
         tools:ignore="QueryAllPackagesPermission" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
-    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <application
         android:name=".MiFreeform"
-        android:allowBackup="true"
-        android:dataExtractionRules="@xml/data_extraction_rules"
-        android:fullBackupContent="@xml/backup_rules"
-        android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
-        android:roundIcon="@mipmap/ic_launcher_round"
-        android:supportsRtl="true"
-        android:theme="@style/Theme.MiFreeform"
-        tools:targetApi="31" >
-<!--        <activity-->
-<!--            android:name=".ui.app_list.FreeformAppActivity"-->
-<!--            android:exported="false"-->
-<!--            android:label="@string/title_activity_freeform_app"-->
-<!--            android:theme="@style/Theme.MiFreeform" />-->
-        <activity
-            android:name=".ui.app_list.AppListActivity"
-            android:exported="true"
-            android:label="@string/title_activity_app_list"
-            android:taskAffinity=":applist"
-            android:theme="@style/Theme.MiFreeform" />
-        <activity
-            android:name=".ui.floating.FloatingActivity"
-            android:exported="true"
-            android:label="@string/title_activity_floating"
-            android:taskAffinity=":floating"
-            android:theme="@style/ActivityDialogTheme" >
-            <intent-filter>
-                <action android:name="android.intent.action.ASSIST" />
+        android:persistent="true">
 
-                <category android:name="android.intent.category.DEFAULT" />
-            </intent-filter>
-        </activity>
-        <activity
-            android:name=".ui.main.MainActivity"
-            android:exported="true"
-            android:theme="@style/Theme.MiFreeform" >
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
-        <activity
-            android:name=".ui.freeform.FreeformActivity"
-            android:exported="true"
-            android:label="@string/title_activity_freeform"
-            android:taskAffinity=":freeform"
-            android:theme="@style/ActivityDialogTheme" />
-
-        <service
-            android:name=".service.QuickStartTileService"
-            android:exported="true"
-            android:icon="@drawable/tile_icon"
-            android:label="@string/sidebar"
-            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE" >
-            <intent-filter>
-                <action android:name="android.service.quicksettings.action.QS_TILE" />
-            </intent-filter>
-        </service>
-        <service
-            android:name=".service.FloatingService"
-            android:enabled="true"
-            android:exported="false" />
-        <service
-            android:name=".service.SidebarService"
-            android:enabled="true"
-            android:exported="false" />
-
-        <receiver
-            android:name=".receiver.BootReceiver"
-            android:exported="true" >
-            <intent-filter>
-                <action android:name="android.intent.action.BOOT_COMPLETED" />
-
-                <category android:name="android.intent.category.HOME" />
-            </intent-filter>
-        </receiver>
         <receiver
             android:name=".receiver.StartFreeformReceiver"
             android:exported="true" >

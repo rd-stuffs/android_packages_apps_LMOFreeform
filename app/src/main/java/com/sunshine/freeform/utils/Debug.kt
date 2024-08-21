@@ -1,5 +1,7 @@
 package com.sunshine.freeform.utils
 
+import android.util.Log;
+
 object Debug {
-    const val isDebug = true
+    val isDebug = Log.isLoggable("MiFreeform", Log.DEBUG)
 }
