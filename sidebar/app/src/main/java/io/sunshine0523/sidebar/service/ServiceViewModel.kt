@@ -16,8 +16,8 @@ import io.sunshine0523.sidebar.app.SidebarApplication
 import io.sunshine0523.sidebar.bean.AppInfo
 import io.sunshine0523.sidebar.room.DatabaseRepository
 import io.sunshine0523.sidebar.systemapi.UserHandleHidden
-import io.sunshine0523.sidebar.utils.Debug
 import io.sunshine0523.sidebar.utils.Logger
+import io.sunshine0523.sidebar.utils.contains
 import io.sunshine0523.sidebar.utils.getInfo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -25,8 +25,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
-import java.util.Collections
-
 
 /**
  * @author KindBrave
@@ -40,7 +38,9 @@ class ServiceViewModel(private val application: Application): AndroidViewModel(a
 
     val sidebarAppListFlow: StateFlow<List<AppInfo>>
         get() = _sidebarAppList.asStateFlow()
-    private val _sidebarAppList = MutableStateFlow<ArrayList<AppInfo>>(ArrayList())
+    private val _sidebarAppList = MutableStateFlow<List<AppInfo>>(emptyList())
+
+    private val recentAppList = MutableStateFlow<List<AppInfo>>(emptyList())
 
     private val launcherApps: LauncherApps = application.getSystemService(Context.LAUNCHER_APPS_SERVICE) as LauncherApps
     private val usageStatsManager = application.getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
@@ -55,25 +55,72 @@ class ServiceViewModel(private val application: Application): AndroidViewModel(a
         0
     )
 
+    private val launcherAppsCallback = object : LauncherApps.Callback() {
+        override fun onPackageRemoved(packageName: String, user: UserHandle) {
+            logger.d("onPackageRemoved: $packageName")
+            _sidebarAppList.value.getInfo(packageName, user)?.let {
+                repository.deleteSidebarApp(it.packageName, it.activityName, it.userId)
+            }
+        }
+
+        override fun onPackageAdded(packageName: String, user: UserHandle) {
+
+        }
+
+        override fun onPackageChanged(packageName: String, user: UserHandle) {
+            logger.d("onPackageChanged: $packageName")
+            val appInfo = application.packageManager.getApplicationInfo(packageName, 0)
+            if (!appInfo.enabled) {
+                onPackageRemoved(packageName, user)
+            }
+        }
+
+        override fun onPackagesAvailable(
+            packageNames: Array<out String>?,
+            user: UserHandle?,
+            replacing: Boolean
+        ) {
+
+        }
+
+        override fun onPackagesUnavailable(
+            packageNames: Array<out String>?,
+            user: UserHandle?,
+            replacing: Boolean
+        ) {
+
+        }
+    }
+
     companion object {
         private const val ALL_APP_PACKAGE = "io.sunshine0523.sidebar"
         private const val ALL_APP_ACTIVITY = "io.sunshine0523.sidebar.ui.all_app.AllAppActivity"
+        private const val MAX_RECENT_APPS = 5
     }
 
     init {
+        logger.d("init")
         initSidebarAppList()
-        initAppListChangeCallback()
+        launcherApps.registerCallback(launcherAppsCallback)
+    }
+
+    override fun onCleared() {
+        logger.d("onCleared")
+        launcherApps.unregisterCallback(launcherAppsCallback)
     }
 
     private fun initSidebarAppList() {
         viewModelScope.launch(Dispatchers.IO) {
             repository.getAllSidebarAppsByFlow()
-                .combine(getRecentAppListFlow()) { sidebarApps, recentApps ->
+                .combine(recentAppList) { sidebarApps, recentApps ->
                     mutableListOf<AppInfo>().apply {
-                        if (Debug.isDebug) logger.d("sidebarApps=$sidebarApps recentApps=$recentApps")
+                        logger.d("sidebarApps=$sidebarApps recentApps=$recentApps")
                         sidebarApps?.forEach { entity ->
                             runCatching {
                                 val info = application.packageManager.getApplicationInfo(entity.packageName, PackageManager.GET_ACTIVITIES)
+                                if (!info.enabled) {
+                                    throw Exception("package is disabled.")
+                                }
                                 add(
                                     AppInfo(
                                         "${info.loadLabel(application.packageManager)}",
@@ -83,22 +130,26 @@ class ServiceViewModel(private val application: Application): AndroidViewModel(a
                                         entity.userId
                                     )
                                 )
-                            }.onFailure {
+                            }.onFailure { e ->
+                                logger.e("initSidebarAppList: failed to add $entity: ", e)
                                 repository.deleteSidebarApp(entity.packageName, entity.activityName, entity.userId)
                             }
                         }
-                        addAll(recentApps)
+                        addAll(
+                            recentApps
+                                .filter { sidebarApps?.contains(it)?.not() ?: true }
+                                .take(MAX_RECENT_APPS)
+                        )
                     }
                 }
                 .collect { sidebarAppList ->
-                    if (Debug.isDebug) logger.d("combinedList=$sidebarAppList")
-                    _sidebarAppList.value = sidebarAppList as ArrayList<AppInfo>
+                    logger.d("initSidebarAppList: combinedList=$sidebarAppList")
+                    _sidebarAppList.value = sidebarAppList.toList()
                 }
         }
     }
 
-    private suspend fun getRecentAppListFlow(): MutableStateFlow<ArrayList<AppInfo>> {
-        val recentListFlow = MutableStateFlow<ArrayList<AppInfo>>(ArrayList())
+    private suspend fun updateRecentAppListFlow() {
         val currentTime = System.currentTimeMillis()
         val startTime = currentTime - 1000 * 60 * 60
         val usageStatsList = usageStatsManager.queryUsageStats(
@@ -106,34 +157,36 @@ class ServiceViewModel(private val application: Application): AndroidViewModel(a
             startTime,
             currentTime
         )
-        if (Debug.isDebug) logger.d("${usageStatsList}")
+        logger.d("updateRecentAppListFlow: size=${usageStatsList.size}")
+
         val recentList = ArrayList<AppInfo>()
-        // 根据上次打开时间进行排序
-        Collections.sort(usageStatsList, lastTimeUsedComparator)
-        usageStatsList.forEach { usageStats ->
-            runCatching {
-                val info = application.packageManager.getApplicationInfo(usageStats.packageName, PackageManager.GET_ACTIVITIES)
-                val launchIntent = application.packageManager.getLaunchIntentForPackage(usageStats.packageName)
-                if (launchIntent != null && launchIntent.component != null) {
-                    val appInfo = AppInfo(
-                        "${info.loadLabel(application.packageManager)}",
-                        info.loadIcon(application.packageManager),
-                        info.packageName,
-                        launchIntent.component!!.className,
-                        0
-                    )
-                    if (_sidebarAppList.value.contains(appInfo).not()) {
-                        recentList.add(
-                            appInfo
+        usageStatsList
+            .sortedWith(lastTimeUsedComparator)
+            .forEach { usageStats ->
+                runCatching {
+                    val info = application.packageManager.getApplicationInfo(usageStats.packageName, PackageManager.GET_ACTIVITIES)
+                    val launchIntent = application.packageManager.getLaunchIntentForPackage(usageStats.packageName)
+                    if (launchIntent != null && launchIntent.component != null) {
+                        val appInfo = AppInfo(
+                            "${info.loadLabel(application.packageManager)}",
+                            info.loadIcon(application.packageManager),
+                            info.packageName,
+                            launchIntent.component!!.className,
+                            0
                         )
+                        recentList.add(appInfo)
                     }
+                }.onFailure {
+                    logger.e("updateRecentAppListFlow failed: $it")
                 }
-            }.onFailure {
-                if (Debug.isDebug) logger.d("getRecentAppListFlow $it")
-            }
         }
-        recentListFlow.emit(recentList)
-        return recentListFlow
+        recentAppList.value = recentList.toList()
+    }
+
+    fun refreshRecentAppList() {
+        viewModelScope.launch(Dispatchers.IO) {
+            updateRecentAppListFlow()
+        }
     }
 
     fun getIntSp(name: String, defaultValue: Int): Int {
@@ -157,62 +210,6 @@ class ServiceViewModel(private val application: Application): AndroidViewModel(a
 
     fun unregisterSpChangeListener(listener: OnSharedPreferenceChangeListener) {
         sp.unregisterOnSharedPreferenceChangeListener(listener)
-    }
-
-    private fun initAppListChangeCallback() {
-        launcherApps.registerCallback(object : LauncherApps.Callback() {
-            override fun onPackageRemoved(packageName: String, user: UserHandle) {
-                val sidebarInfo = _sidebarAppList.value.getInfo(packageName, user)
-                if (sidebarInfo != null) {
-                    repository.deleteSidebarApp(sidebarInfo.packageName, sidebarInfo.activityName, sidebarInfo.userId)
-                }
-                _sidebarAppList.value.remove(sidebarInfo)
-                //_appList.value.remove(_appList.value.getInfo(packageName, user))
-            }
-
-            override fun onPackageAdded(packageName: String, user: UserHandle) {
-                //_appList.value.remove(_appList.value.getInfo(packageName, user))
-
-                runCatching {
-                    val info = application.packageManager.getApplicationInfo(packageName, PackageManager.GET_ACTIVITIES)
-                    val launchIntent = application.packageManager.getLaunchIntentForPackage(packageName)
-                    val userId = UserHandleHidden.getUserId(user)
-//                    if (launchIntent != null && launchIntent.component != null) {
-//                        _appList.value.add(
-//                            AppInfo(
-//                                "${info.loadLabel(application.packageManager)}${if (userId != 0) -userId else ""}",
-//                                info.loadIcon(application.packageManager),
-//                                info.packageName,
-//                                launchIntent.component!!.className,
-//                                userId
-//                            )
-//                        )
-//                    }
-//                    Collections.sort(allAppList, appComparator)
-                }
-            }
-
-            override fun onPackageChanged(packageName: String, user: UserHandle) {
-
-            }
-
-            override fun onPackagesAvailable(
-                packageNames: Array<out String>?,
-                user: UserHandle?,
-                replacing: Boolean
-            ) {
-
-            }
-
-            override fun onPackagesUnavailable(
-                packageNames: Array<out String>?,
-                user: UserHandle?,
-                replacing: Boolean
-            ) {
-
-            }
-
-        })
     }
 
     private inner class LastTimeUsedComparator : Comparator<UsageStats> {

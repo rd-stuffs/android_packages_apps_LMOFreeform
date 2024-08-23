@@ -29,7 +29,7 @@ fun AllAppGridView(
     onClick: (AppInfo) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val appList by viewModel.appListFlow.collectAsState(emptyList())
+    val appList by viewModel.appListFlow.collectAsState()
     Surface(
         color = MaterialTheme.colorScheme.surfaceContainer,
         modifier = modifier
@@ -68,7 +68,7 @@ fun AllAppGridItem(
         Text(
             text = appInfo.label,
             maxLines = 1,
-            textSize = 12.sp,
+            fontSize = 12.sp,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.padding(top = 4.dp)
         )

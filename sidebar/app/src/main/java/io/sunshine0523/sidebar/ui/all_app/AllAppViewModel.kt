@@ -10,13 +10,12 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import io.sunshine0523.sidebar.bean.AppInfo
 import io.sunshine0523.sidebar.systemapi.UserHandleHidden
-import io.sunshine0523.sidebar.utils.Debug
 import io.sunshine0523.sidebar.utils.Logger
 import io.sunshine0523.sidebar.utils.getInfo
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.text.Collator
 import java.util.Collections
@@ -29,18 +28,85 @@ import java.util.Locale
 class AllAppViewModel(private val application: Application): AndroidViewModel(application) {
     private val logger = Logger("AllAppViewModel")
     private val allAppList = ArrayList<AppInfo>()
-    val appListFlow: SharedFlow<List<AppInfo>>
-        get() = _appList.asSharedFlow()
-    private val _appList = MutableSharedFlow<ArrayList<AppInfo>>()
-
-    private val userManager: UserManager = application.getSystemService(Context.USER_SERVICE) as UserManager
-    private val launcherApps: LauncherApps = application.getSystemService(Context.LAUNCHER_APPS_SERVICE) as LauncherApps
-
+    val appListFlow: StateFlow<List<AppInfo>>
+        get() = _appList.asStateFlow()
+    private val _appList = MutableStateFlow<List<AppInfo>>(emptyList())
     private val appComparator = AppComparator()
 
+    private val userManager = application.getSystemService(Context.USER_SERVICE) as UserManager
+    private val launcherApps = application.getSystemService(Context.LAUNCHER_APPS_SERVICE) as LauncherApps
+
+    private val launcherAppsCallback = object : LauncherApps.Callback() {
+        override fun onPackageRemoved(packageName: String, user: UserHandle) {
+            logger.d("onPackageRemoved: $packageName")
+            viewModelScope.launch(Dispatchers.IO) {
+                allAppList.remove(allAppList.getInfo(packageName, user))
+                _appList.value = allAppList.toList()
+            }
+        }
+
+        override fun onPackageAdded(packageName: String, user: UserHandle) {
+            logger.d("onPackageAdded: $packageName")
+            viewModelScope.launch(Dispatchers.IO) {
+                allAppList.remove(allAppList.getInfo(packageName, user))
+            }
+
+            runCatching {
+                val info = application.packageManager.getApplicationInfo(packageName, PackageManager.GET_ACTIVITIES)
+                val launchIntent = application.packageManager.getLaunchIntentForPackage(packageName)
+                val userId = UserHandleHidden.getUserId(user)
+                if (launchIntent != null && launchIntent.component != null) {
+                    viewModelScope.launch(Dispatchers.IO) {
+                        allAppList.add(
+                            AppInfo(
+                                "${info.loadLabel(application.packageManager)}${if (userId != 0) -userId else ""}",
+                                info.loadIcon(application.packageManager),
+                                info.packageName,
+                                launchIntent.component!!.className,
+                                userId
+                            )
+                        )
+                        Collections.sort(allAppList, appComparator)
+                        _appList.value = allAppList.toList()
+                    }
+                }
+            }
+        }
+
+        override fun onPackageChanged(packageName: String, user: UserHandle) {
+            logger.d("onPackageChanged: $packageName")
+            val appInfo = application.packageManager.getApplicationInfo(packageName, 0)
+            if (!appInfo.enabled) {
+                onPackageRemoved(packageName, user)
+            }
+        }
+
+        override fun onPackagesAvailable(
+            packageNames: Array<out String>?,
+            user: UserHandle?,
+            replacing: Boolean
+        ) {
+
+        }
+
+        override fun onPackagesUnavailable(
+            packageNames: Array<out String>?,
+            user: UserHandle?,
+            replacing: Boolean
+        ) {
+
+        }
+    }
+
     init {
+        logger.d("init")
         initAllAppList()
-        initAppListChangeCallback()
+        launcherApps.registerCallback(launcherAppsCallback)
+    }
+
+    override fun onCleared() {
+        logger.d("onCleared")
+        launcherApps.unregisterCallback(launcherAppsCallback)
     }
 
     private fun initAllAppList() {
@@ -65,89 +131,13 @@ class AllAppViewModel(private val application: Application): AndroidViewModel(ap
                 }
             }
             Collections.sort(allAppList, appComparator)
-            _appList.emit(allAppList)
-        }
-    }
-
-    private fun initAppListChangeCallback() {
-        launcherApps.registerCallback(object : LauncherApps.Callback() {
-            override fun onPackageRemoved(packageName: String, user: UserHandle) {
-                if (Debug.isDebug) logger.d("onPackageRemoved $packageName $user")
-                viewModelScope.launch(Dispatchers.IO) {
-                    allAppList.remove(allAppList.getInfo(packageName, user))
-                    _appList.emit(allAppList)
-                }
-            }
-
-            override fun onPackageAdded(packageName: String, user: UserHandle) {
-                if (Debug.isDebug) logger.d("onPackageAdded $packageName $user")
-                viewModelScope.launch(Dispatchers.IO) {
-                    allAppList.remove(allAppList.getInfo(packageName, user))
-                }
-
-                runCatching {
-                    val info = application.packageManager.getApplicationInfo(packageName, PackageManager.GET_ACTIVITIES)
-                    val launchIntent = application.packageManager.getLaunchIntentForPackage(packageName)
-                    val userId = UserHandleHidden.getUserId(user)
-                    if (launchIntent != null && launchIntent.component != null) {
-                        viewModelScope.launch(Dispatchers.IO) {
-                            allAppList.add(
-                                AppInfo(
-                                    "${info.loadLabel(application.packageManager)}${if (userId != 0) -userId else ""}",
-                                    info.loadIcon(application.packageManager),
-                                    info.packageName,
-                                    launchIntent.component!!.className,
-                                    userId
-                                )
-                            )
-                            Collections.sort(allAppList, appComparator)
-                            _appList.emit(allAppList)
-                        }
-                    }
-                }
-            }
-
-            override fun onPackageChanged(packageName: String, user: UserHandle) {
-
-            }
-
-            override fun onPackagesAvailable(
-                packageNames: Array<out String>?,
-                user: UserHandle?,
-                replacing: Boolean
-            ) {
-
-            }
-
-            override fun onPackagesUnavailable(
-                packageNames: Array<out String>?,
-                user: UserHandle?,
-                replacing: Boolean
-            ) {
-
-            }
-
-        })
-    }
-
-    fun filterApp(filter: String) {
-        viewModelScope.launch(Dispatchers.IO) {
-            if (filter.isBlank()) {
-                _appList.emit(allAppList)
-            }
-            else {
-                val filterAppList = allAppList.filter { appInfo ->
-                    appInfo.label.contains(filter, true)
-                }
-                Collections.sort(filterAppList, appComparator)
-                _appList.emit(filterAppList as ArrayList<AppInfo>)
-            }
+            _appList.value = allAppList.toList()
         }
     }
 
     private inner class AppComparator : Comparator<AppInfo> {
         override fun compare(p0: AppInfo, p1: AppInfo): Int {
-            return Collator.getInstance(Locale.CHINESE).compare(p0.label, p1.label)
+            return Collator.getInstance().compare(p0.label, p1.label)
         }
     }
 }

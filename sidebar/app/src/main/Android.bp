@@ -16,32 +16,19 @@
 
 android_app {
     name: "MiFreeformSidebar",
-    srcs: [
-        "java/**/*.kt",
-        // "java/**/*.java",
-    ],
-    exclude_srcs: [
-        "java/io/sunshine0523/sidebar/hook/*.kt",
-        "java/io/sunshine0523/sidebar/ui/main/*.kt",
-        // TODO redo in compose
-        "java/io/sunshine0523/sidebar/ui/sidebar/*.kt",
-    ],
+    srcs: ["java/**/*.kt"],
     resource_dirs: ["res"],
     certificate: "platform",
     platform_apis: true,
     system_ext_specific: true,
     privileged: true,
     static_libs: [
-        // "PlatformComposeCore",
         "SpaLib",
-        "androidx-constraintlayout_constraintlayout",
         "androidx.activity_activity-compose",
         "androidx.appcompat_appcompat",
         "androidx.compose.material3_material3",
         "androidx.compose.runtime_runtime",
-        "androidx.compose.runtime_runtime-livedata",
         "androidx.core_core-ktx",
-        "androidx.preference_preference",
         "androidx.room_room-ktx",
         "com.google.android.material_material",
     ],

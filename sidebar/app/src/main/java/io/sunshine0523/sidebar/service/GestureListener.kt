@@ -3,7 +3,6 @@ package io.sunshine0523.sidebar.service
 import android.os.Handler
 import android.os.Looper
 import android.view.MotionEvent
-import io.sunshine0523.sidebar.utils.Debug
 import io.sunshine0523.sidebar.utils.Logger
 
 /**
@@ -51,7 +50,7 @@ class GestureListener(private val callback: Callback) : MGestureManager.MGesture
             }
             MotionEvent.ACTION_MOVE -> {
                 if (isLongPress) {
-                    if (Debug.isDebug) logger.d("${event.rawX}")
+                    logger.d("${event.rawX}")
                     callback.moveSideline((event.rawX - initialTouchX).toInt(), (event.rawY - initialTouchY).toInt(), event.rawX.toInt(), event.rawY.toInt())
                     initialTouchX = event.rawX
                     initialTouchY = event.rawY

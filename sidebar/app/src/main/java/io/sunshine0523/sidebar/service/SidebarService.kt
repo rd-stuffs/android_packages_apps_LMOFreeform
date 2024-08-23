@@ -13,7 +13,6 @@ import android.view.WindowManager
 import android.widget.Toast
 import androidx.appcompat.content.res.AppCompatResources
 import io.sunshine0523.sidebar.R
-import io.sunshine0523.sidebar.utils.Debug
 import io.sunshine0523.sidebar.utils.Logger
 
 class SidebarService : Service(), SharedPreferences.OnSharedPreferenceChangeListener,
@@ -41,7 +40,7 @@ class SidebarService : Service(), SharedPreferences.OnSharedPreferenceChangeList
         private const val OFFSET = 20
 
         //是否展示侧边条
-        private const val SIDELINE = "sideline"
+        const val SIDELINE = "sideline"
         private const val SIDELINE_POSITION_X = "sideline_position_x"
         private const val SIDELINE_POSITION_Y_PORTRAIT = "sideline_position_y_portrait"
         private const val SIDELINE_POSITION_Y_LANDSCAPE = "sideline_position_y_landscape"
@@ -181,9 +180,8 @@ class SidebarService : Service(), SharedPreferences.OnSharedPreferenceChangeList
                 true
             }
             windowManager.addView(sideLineView, layoutParams)
-        }.onFailure {
-            if (Debug.isDebug) logger.d("$it")
-            Toast.makeText(this, getString(R.string.check_xposed_permission), Toast.LENGTH_LONG).show()
+        }.onFailure { e ->
+            logger.e("failed to add sideline view: ", e)
         }
     }
 

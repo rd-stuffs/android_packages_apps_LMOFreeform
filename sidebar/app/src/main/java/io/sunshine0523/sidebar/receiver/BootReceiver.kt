@@ -4,7 +4,6 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import io.sunshine0523.sidebar.service.SidebarService
-import io.sunshine0523.sidebar.utils.Debug
 import io.sunshine0523.sidebar.utils.Logger
 import java.util.logging.Handler
 
@@ -20,7 +19,7 @@ class BootReceiver : BroadcastReceiver() {
     }
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action == BOOT) {
-            if (Debug.isDebug) logger.d("Boot Completed")
+            logger.d("Boot Completed")
             context.startService(Intent(context, SidebarService::class.java))
         }
     }

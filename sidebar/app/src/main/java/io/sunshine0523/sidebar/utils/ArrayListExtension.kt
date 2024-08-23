@@ -3,6 +3,7 @@ package io.sunshine0523.sidebar.utils
 import android.os.UserHandle
 import io.sunshine0523.sidebar.bean.AppInfo
 import io.sunshine0523.sidebar.room.SidebarAppsEntity
+import io.sunshine0523.sidebar.systemapi.UserHandleHidden
 
 /**
  * @author KindBrave
@@ -17,11 +18,11 @@ fun <T> List<T>.contains(element: T, predicate: (T, T) -> Boolean): Boolean {
     return false
 }
 
-fun ArrayList<AppInfo>.getInfo(packageName: String, userHandle: UserHandle): AppInfo? {
+fun List<AppInfo>.getInfo(packageName: String, userHandle: UserHandle): AppInfo? {
     for (item in this) {
         if (
             item.packageName == packageName &&
-            item.userId == io.sunshine0523.sidebar.systemapi.UserHandleHidden.getUserId(userHandle)) return item
+            item.userId == UserHandleHidden.getUserId(userHandle)) return item
     }
     return null
 }
@@ -40,4 +41,12 @@ fun List<SidebarAppsEntity>.contains(packageName: String, activityName: String, 
         ) return true
     }
     return false
+}
+
+fun List<SidebarAppsEntity>.contains(appInfo: AppInfo): Boolean {
+    return this.contains(
+        appInfo.packageName,
+        appInfo.activityName,
+        appInfo.userId
+    )
 }

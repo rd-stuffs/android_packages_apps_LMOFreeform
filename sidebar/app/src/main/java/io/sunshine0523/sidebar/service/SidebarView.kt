@@ -22,7 +22,6 @@ import androidx.savedstate.SavedStateRegistryOwner
 import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 import io.sunshine0523.sidebar.bean.AppInfo
 import io.sunshine0523.sidebar.ui.theme.SidebarTheme
-import io.sunshine0523.sidebar.utils.Debug
 import io.sunshine0523.sidebar.utils.Logger
 import kotlin.math.roundToInt
 
@@ -106,13 +105,15 @@ class SidebarView(
         composeView.translationX = sidebarPositionX * 1.0f * 200
 
         composeView.setOnTouchListener { view, event ->
-            if (Debug.isDebug) logger.d("$view $event")
+            logger.d("$view $event")
             if (event.action == MotionEvent.ACTION_UP) {
                 removeView()
                 true
             }
             false
         }
+
+        viewModel.refreshRecentAppList()
 
         runCatching {
             lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_START)
