@@ -31,8 +31,10 @@ public class FreeformWindowManager {
         UIConfig uiConfig = new UIConfig(resPkg, layoutName);
         FreeformWindow window = new FreeformWindow(handler, context, appConfig, freeformConfig, uiConfig);
         //if freeform exist, remove old
-        FreeformWindow oldWindow = freeformWindows.get(window.getFreeformId());
-        if (oldWindow != null) oldWindow.destroy("addWindow:destroy old window", false);
+        freeformWindows.forEach((ignored, oldWindow) -> {
+            oldWindow.destroy("addWindow: destroy old window", false);
+        });
+        freeformWindows.clear();
         freeformWindows.put(window.getFreeformId(), window);
     }
 
