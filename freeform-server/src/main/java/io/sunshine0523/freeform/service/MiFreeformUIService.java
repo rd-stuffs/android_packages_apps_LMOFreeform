@@ -2,10 +2,12 @@ package io.sunshine0523.freeform.service;
 
 import static android.content.Context.CONTEXT_IGNORE_SECURITY;
 import static android.content.Context.CONTEXT_INCLUDE_CODE;
+import static android.os.Process.SYSTEM_UID;
 
 import android.app.PendingIntent;
 import android.content.Context;
 import android.hardware.display.DisplayManagerInternal;
+import android.os.Binder;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.RemoteException;
@@ -59,6 +61,9 @@ public class MiFreeformUIService extends IMiFreeformUIService.Stub {
             int width, int height, int densityDpi, float refreshRate,
             boolean secure, boolean ownContentOnly, boolean shouldShowSystemDecorations,
             String resPkg, String layoutName) {
+        if (Binder.getCallingUid() != SYSTEM_UID) {
+            throw new SecurityException("Caller must be system");
+        }
         Slog.i(TAG, "startAppInFreeform");
         FreeformWindowManager.addWindow(
                 handler, systemContext,
@@ -70,6 +75,9 @@ public class MiFreeformUIService extends IMiFreeformUIService.Stub {
 
     @Override
     public void removeFreeform(String freeformId) {
+        if (Binder.getCallingUid() != SYSTEM_UID) {
+            throw new SecurityException("Caller must be system");
+        }
         FreeformWindowManager.removeWindow(freeformId);
     }
 
@@ -79,6 +87,9 @@ public class MiFreeformUIService extends IMiFreeformUIService.Stub {
             boolean secure, boolean ownContentOnly, boolean shouldShowSystemDecorations,
             Surface surface, IMiFreeformDisplayCallback callback
     ) {
+        if (Binder.getCallingUid() != SYSTEM_UID) {
+            throw new SecurityException("Caller must be system");
+        }
         displayManager.createFreeformLocked(
                 name, callback,
                 width, height, densityDpi,
@@ -89,16 +100,25 @@ public class MiFreeformUIService extends IMiFreeformUIService.Stub {
 
     @Override
     public void resizeFreeform(IBinder appToken, int width, int height, int densityDpi) {
+        if (Binder.getCallingUid() != SYSTEM_UID) {
+            throw new SecurityException("Caller must be system");
+        }
         displayManager.resizeFreeform(appToken, width, height, densityDpi);
     }
 
     @Override
     public void releaseFreeform(IBinder appToken) {
+        if (Binder.getCallingUid() != SYSTEM_UID) {
+            throw new SecurityException("Caller must be system");
+        }
         displayManager.releaseFreeform(appToken);
     }
 
     @Override
     public boolean ping() {
+        if (Binder.getCallingUid() != SYSTEM_UID) {
+            throw new SecurityException("Caller must be system");
+        }
         // need inputManager is not null
         return miFreeformService.isRunning();
     }
