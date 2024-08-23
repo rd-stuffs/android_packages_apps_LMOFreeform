@@ -2,13 +2,13 @@ package io.sunshine0523.freeform.ui.freeform
 
 import android.annotation.SuppressLint
 import android.os.Build
+import android.util.Slog
 import android.view.Display
 import android.view.GestureDetector.SimpleOnGestureListener
 import android.view.MotionEvent
 import android.view.View
 import io.sunshine0523.freeform.service.MiFreeformServiceHolder
 import io.sunshine0523.freeform.service.SystemServiceHolder
-import io.sunshine0523.freeform.util.MLog
 import kotlin.math.max
 import kotlin.math.roundToInt
 
@@ -57,22 +57,11 @@ class LeftViewLongClickListener(private val window: FreeformWindow): View.OnLong
     }
     override fun onLongClick(v: View): Boolean {
         if (null != window.freeformTaskStackListener) {
-            // when {
-                // Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-                    if (window.freeformTaskStackListener!!.taskId == -1) {
-                        MLog.e(TAG, "taskId is -1, can`t move")
-                        return true
-                    }
-                    runCatching { SystemServiceHolder.activityTaskManager.moveRootTaskToDisplay(window.freeformTaskStackListener!!.taskId, Display.DEFAULT_DISPLAY) }
-                // }
-                // Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q -> {
-                //     if (window.freeformTaskStackListener!!.stackId == -1) {
-                //         MLog.e(TAG, "stackId is -1, can`t move")
-                //         return true
-                //     }
-                //     runCatching { SystemServiceHolder.activityTaskManager.moveStackToDisplay(window.freeformTaskStackListener!!.stackId, Display.DEFAULT_DISPLAY) }
-                // }
-            // }
+            if (window.freeformTaskStackListener!!.taskId == -1) {
+                Slog.e(TAG, "taskId is -1, can`t move")
+                return true
+            }
+            runCatching { SystemServiceHolder.activityTaskManager.moveRootTaskToDisplay(window.freeformTaskStackListener!!.taskId, Display.DEFAULT_DISPLAY) }
         }
         window.destroy("LeftViewLongClickListener", false)
         return true
@@ -85,11 +74,6 @@ class LeftViewLongClickListener(private val window: FreeformWindow): View.OnLong
 class RightViewLongClickListener(private val window: FreeformWindow): View.OnLongClickListener {
     override fun onLongClick(v: View): Boolean {
         window.handler.post {
-//            // change orientation
-//            val tmp = window.freeformConfig.width
-//            window.freeformConfig.width = window.freeformConfig.height
-//            window.freeformConfig.height = tmp
-//            window.changeOrientation()
             // hangup
             window.handleHangUp()
         }

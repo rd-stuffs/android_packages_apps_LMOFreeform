@@ -6,7 +6,7 @@ import android.graphics.PixelFormat
 import android.graphics.SurfaceTexture
 import android.os.Build
 import android.os.Handler
-import android.util.Log
+import android.util.Slog
 import android.view.Display
 import android.view.GestureDetector
 import android.view.MotionEvent
@@ -19,7 +19,6 @@ import android.widget.FrameLayout
 import io.sunshine0523.freeform.IMiFreeformDisplayCallback
 import io.sunshine0523.freeform.service.MiFreeformServiceHolder
 import io.sunshine0523.freeform.service.SystemServiceHolder
-import io.sunshine0523.freeform.util.MLog
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
@@ -54,7 +53,7 @@ class FreeformWindow(
     init {
         measureScale()
         if (MiFreeformServiceHolder.ping()) {
-            MLog.i(TAG, "FreeformWindow init")
+            Slog.i(TAG, "FreeformWindow init")
             handler.post { if (!addFreeformView()) destroy("init:addFreeform failed") }
         } else {
             destroy("init:service not running")
@@ -75,7 +74,7 @@ class FreeformWindow(
     }
 
     override fun onSurfaceTextureAvailable(surfaceTexture: SurfaceTexture, width: Int, height: Int) {
-        MLog.i(TAG, "onSurfaceTextureAvailable width:$width height:$height")
+        Slog.i(TAG, "onSurfaceTextureAvailable width:$width height:$height")
         if (displayId < 0) {
             MiFreeformServiceHolder.createDisplay(freeformConfig, appConfig, Surface(surfaceTexture), this)
         }
@@ -95,16 +94,11 @@ class FreeformWindow(
     }
 
     override fun onDisplayAdd(displayId: Int) {
-        MLog.i(TAG, "onDisplayAdd displayId $displayId")
+        Slog.i(TAG, "onDisplayAdd displayId $displayId")
         handler.post {
             this.displayId = displayId
             freeformTaskStackListener = FreeformTaskStackListener(displayId, this)
-            // if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                SystemServiceHolder.activityTaskManager.registerTaskStackListener(freeformTaskStackListener)
-            // } else {
-            //     SystemServiceHolder.activityManager.registerTaskStackListener(freeformTaskStackListener)
-            // }
-            // pendingIntent
+            SystemServiceHolder.activityTaskManager.registerTaskStackListener(freeformTaskStackListener)
             if (appConfig.userId == -100) {
                 if (appConfig.pendingIntent == null) destroy("onDisplayAdd:userId=-100, but pendingIntent is null", false)
                 else {
@@ -116,7 +110,7 @@ class FreeformWindow(
 
             val rightView = resourceHolder.getLayoutChildViewByTag<View>(freeformLayout, "rightView")
             if (null == rightView) {
-                MLog.e(TAG, "right&rightScale view is null")
+                Slog.e(TAG, "right&rightScale view is null")
                 destroy("onDisplayAdd:rightView is null")
                 return@post
             }
@@ -180,7 +174,7 @@ class FreeformWindow(
      */
     @SuppressLint("WrongConstant")
     private fun addFreeformView(): Boolean {
-        MLog.i(TAG, "addFreeformView")
+        Slog.i(TAG, "addFreeformView")
         val tmpFreeformLayout = resourceHolder.getLayout(uiConfig.layoutName) ?: return false
         freeformLayout = tmpFreeformLayout
         freeformRootView = resourceHolder.getLayoutChildViewByTag<FrameLayout>(freeformLayout, "freeform_root") ?: return false
@@ -194,7 +188,7 @@ class FreeformWindow(
         val leftScaleView = resourceHolder.getLayoutChildViewByTag<View>(freeformLayout, "leftScaleView")
         val rightScaleView = resourceHolder.getLayoutChildViewByTag<View>(freeformLayout, "rightScaleView")
         if (null == leftView || null == leftScaleView || null == rightScaleView) {
-            MLog.e(TAG, "left&leftScale&rightScale view is null")
+            Slog.e(TAG, "left&leftScale&rightScale view is null")
             destroy("addFreeformView:left&leftScale&rightScale view is null")
             return false
         }
@@ -230,7 +224,7 @@ class FreeformWindow(
             windowManager.addView(freeformLayout, windowParams)
             FreeformWindowManager.topWindow = getFreeformId()
         }.onFailure {
-            MLog.e(TAG, "addView failed: $it")
+            Slog.e(TAG, "addView failed: $it")
             return false
         }
         return true
@@ -285,7 +279,7 @@ class FreeformWindow(
             width = freeformConfig.hangUpWidth
             height = freeformConfig.hangUpHeight
         }
-        runCatching { windowManager.updateViewLayout(freeformLayout, windowParams) }.onFailure { MLog.e(TAG, "$it") }
+        runCatching { windowManager.updateViewLayout(freeformLayout, windowParams) }.onFailure { Slog.e(TAG, "$it") }
     }
 
     /**
@@ -336,19 +330,16 @@ class FreeformWindow(
     }
 
     fun destroy(callReason: String, removeTask: Boolean = true) {
-        MLog.i(TAG, "destroy ${getFreeformId()}, displayId=$displayId, callReason: $callReason")
+        Slog.i(TAG, "destroy ${getFreeformId()}, displayId=$displayId, callReason: $callReason")
         handler.post {
-            runCatching { windowManager.removeViewImmediate(freeformLayout) }.onFailure { exception -> Log.e(TAG, "removeView failed $exception") }
+            runCatching { windowManager.removeViewImmediate(freeformLayout) }
+                .onFailure { exception -> Slog.e(TAG, "removeView failed $exception") }
         }
         if (removeTask) runCatching {
-            // if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                SystemServiceHolder.activityTaskManager.removeTask(freeformTaskStackListener!!.taskId)
-            // } else {
-            //     SystemServiceHolder.activityManager.removeTask(freeformTaskStackListener!!.taskId)
-            // }
+            SystemServiceHolder.activityTaskManager.removeTask(freeformTaskStackListener!!.taskId)
             freeformTaskStackListener?.listenTaskRemoved = true
         }.onFailure { exception ->
-            MLog.e(TAG, "removeTask failed $exception")
+            Slog.e(TAG, "removeTask failed $exception")
         }
         SystemServiceHolder.windowManager.removeRotationWatcher(rotationWatcher)
         FreeformWindowManager.removeWindow(getFreeformId())

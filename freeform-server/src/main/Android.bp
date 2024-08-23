@@ -18,7 +18,6 @@ filegroup {
     name: "mifreeform-display-adapter-java",
     srcs: [
         "java/com/android/server/display/MiFreeformDisplayAdapter.java",
-        "java/com/android/server/display/MiFreeformUDisplayAdapter.java",
     ],
     visibility: ["//frameworks/base/services/core"],
 }
@@ -28,11 +27,9 @@ java_library_static {
     libs: ["services.core"],
     static_libs: [
         "androidx.core_core-ktx",
-        "gson",
     ],
     srcs: [
         "java/io/sunshine0523/freeform/**/*.java",
         "java/io/sunshine0523/freeform/**/*.kt",
-    ],
-    exclude_srcs: ["java/io/sunshine0523/freeform/ZygoteMain.java"],
+    ]
 }

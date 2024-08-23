@@ -1,11 +1,11 @@
 package io.sunshine0523.freeform.service;
 
 import android.hardware.display.DisplayManagerInternal;
+import android.util.Slog;
 import android.view.InputEvent;
 import android.view.Surface;
 
 import io.sunshine0523.freeform.IMiFreeformDisplayCallback;
-import io.sunshine0523.freeform.util.MLog;
 
 public class MiFreeformService {
     private static final String TAG = "Mi-Freeform/MiFreeformService";
@@ -24,13 +24,12 @@ public class MiFreeformService {
                 width, height, densityDpi, secure,
                 ownContentOnly, shouldShowSystemDecorations, surface,
                 refreshRate, presentationDeadlineNanos);
-        MLog.i(TAG, "createFreeform");
+        Slog.d(TAG, "createFreeform");
     }
 
     public void injectInputEvent(InputEvent event, int displayId) {
         try {
             event.setDisplayId(displayId);
-            // event.getClass().getMethod("setDisplayId", int.class).invoke(event, displayId);
             SystemServiceHolder.inputManagerService.injectInputEvent(event, 0);
         } catch (Exception e) {
             throw new RuntimeException(e);

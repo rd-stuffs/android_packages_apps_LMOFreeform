@@ -73,12 +73,4 @@ object MiFreeformServiceManager {
     fun removeFreeform(freeformId: String) {
         iMiFreeformService?.removeFreeform(freeformId)
     }
-
-    fun getLog(): String {
-        return iMiFreeformService?.log ?: "Maybe Mi-Freeform can`t link mi_freeform service. You can get log at /data/system/mi_freeform/log.log"
-    }
-
-    fun clearLog() {
-        iMiFreeformService?.clearLog()
-    }
 }

@@ -14,6 +14,7 @@ import android.os.IBinder;
 import android.os.RemoteException;
 import android.os.SystemClock;
 import android.os.UserHandle;
+import android.util.Slog;
 import android.view.InputDevice;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
@@ -22,7 +23,6 @@ import android.view.Surface;
 import io.sunshine0523.freeform.IMiFreeformDisplayCallback;
 import io.sunshine0523.freeform.ui.freeform.AppConfig;
 import io.sunshine0523.freeform.ui.freeform.FreeformConfig;
-import io.sunshine0523.freeform.util.MLog;
 
 public class MiFreeformServiceHolder {
     private static final String TAG = "Mi-Freeform/MiFreeformServiceManager";
@@ -40,7 +40,7 @@ public class MiFreeformServiceHolder {
         try {
             return miFreeformUIService.ping();
         } catch (Exception e) {
-            MLog.e(TAG, e.toString());
+            Slog.e(TAG, e.toString());
             return false;
         }
     }
@@ -72,29 +72,18 @@ public class MiFreeformServiceHolder {
             intent.addCategory(Intent.CATEGORY_LAUNCHER);
             ActivityOptions activityOptions = ActivityOptions.makeBasic();
             activityOptions.setLaunchDisplayId(displayId);
-            // ActivityOptions activityOptionsHidden = Refine.unsafeCast(activityOptions);
-            // if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                // activityOptionsHidden.setCallerDisplayId(displayId);
-            // }
             activityOptions.setCallerDisplayId(displayId);
-            // Context.class.getMethod("startActivityAsUser", Intent.class, Bundle.class, UserHandle.class)
-            //         .invoke(context, intent, activityOptions.toBundle(), new UserHandle(appConfig.getUserId()));
             context.startActivityAsUser(intent, activityOptions.toBundle(), new UserHandle(appConfig.getUserId()));
             return true;
         } catch (Exception e) {
-            MLog.e(TAG, "startApp failed", e);
+            Slog.e(TAG, "startApp failed", e);
             return false;
         }
     }
 
     public static void startPendingIntent(PendingIntent pendingIntent, int displayId) {
-        // PendingIntent pendingIntentHidden = Refine.unsafeCast(pendingIntent);
         ActivityOptions activityOptions = ActivityOptions.makeBasic();
         activityOptions.setLaunchDisplayId(displayId);
-        // ActivityOptions activityOptionsHidden = Refine.unsafeCast(activityOptions);
-        // if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-        //     activityOptionsHidden.setCallerDisplayId(displayId);
-        // }
         activityOptions.setCallerDisplayId(displayId);
 
         final IApplicationThread app = ActivityThread.currentActivityThread()
@@ -112,7 +101,7 @@ public class MiFreeformServiceHolder {
                     activityOptions.toBundle()
             );
         } catch (RemoteException e) {
-            MLog.e(TAG, "startPendingIntent failed!", e);
+            Slog.e(TAG, "startPendingIntent failed!", e);
         }
     }
 

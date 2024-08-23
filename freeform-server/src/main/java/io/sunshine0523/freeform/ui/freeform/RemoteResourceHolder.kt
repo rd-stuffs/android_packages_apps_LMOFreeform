@@ -4,12 +4,10 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Context.CONTEXT_IGNORE_SECURITY
 import android.content.Context.CONTEXT_INCLUDE_CODE
-import android.util.Log
+import android.util.Slog
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import io.sunshine0523.freeform.util.MLog
-
 
 @SuppressLint("WrongConstant", "DiscouragedApi")
 class RemoteResourceHolder(context: Context, private val resPkg: String) {
@@ -25,7 +23,7 @@ class RemoteResourceHolder(context: Context, private val resPkg: String) {
             remoteContext = context.createPackageContext(resPkg, CONTEXT_INCLUDE_CODE or CONTEXT_IGNORE_SECURITY)
         } catch (e: Exception) {
             e.printStackTrace()
-            MLog.e(TAG, "init", e)
+            Slog.e(TAG, "init", e)
             runCatching { remoteContext = context.createPackageContext(resPkg, CONTEXT_INCLUDE_CODE or CONTEXT_IGNORE_SECURITY) }
         }
     }
@@ -34,11 +32,11 @@ class RemoteResourceHolder(context: Context, private val resPkg: String) {
         return try {
             val freeformLayoutId = remoteContext.resources.getIdentifier(layoutName, "layout", resPkg)
                 val r = LayoutInflater.from(remoteContext).inflate(freeformLayoutId, null, false)
-            if (null == r) Log.e(TAG, "can not find layout $layoutName")
+            if (null == r) Slog.e(TAG, "can not find layout $layoutName")
             r as ViewGroup
         } catch (e: Exception) {
             e.printStackTrace()
-            MLog.e(TAG, "getLayout", e)
+            Slog.e(TAG, "getLayout", e)
             null
         }
     }
@@ -46,11 +44,11 @@ class RemoteResourceHolder(context: Context, private val resPkg: String) {
     fun <T : View> getLayoutChildViewByTag(layout: ViewGroup, tagName: String): T? {
         return try {
             val r = layout.findViewWithTag<T>(tagName)
-            if (null == r) MLog.e(TAG, "can not find tag $tagName in $layout")
+            if (null == r) Slog.e(TAG, "can not find tag $tagName in $layout")
             r
         } catch (e: Exception) {
             e.printStackTrace()
-            MLog.e(TAG, "getLayoutChildViewByTag", e)
+            Slog.e(TAG, "getLayoutChildViewByTag", e)
             null
         }
     }

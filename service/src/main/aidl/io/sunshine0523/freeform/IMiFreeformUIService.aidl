@@ -24,10 +24,4 @@ interface IMiFreeformUIService {
     void resizeFreeform(IBinder appToken, int width, int height, int densityDpi) = 3;
     void releaseFreeform(IBinder appToken) = 4;
     boolean ping() = 5;
-    String getSettings() = 6;
-    void setSettings(String settings) = 7;
-    String getLog() = 8;
-    void clearLog() = 9;
-    void collapseStatusBar() = 10;
-    void cancelNotification(String key) = 11;
 }
