@@ -1,12 +1,16 @@
 package com.libremobileos.sidebar.service
 
 import android.app.Application
-import android.app.usage.UsageStats
-import android.app.usage.UsageStatsManager
+import android.app.prediction.AppPredictionContext
+import android.app.prediction.AppPredictionManager
+import android.app.prediction.AppPredictor
+import android.app.prediction.AppTarget
 import android.content.Context
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener
 import android.content.pm.LauncherApps
 import android.content.pm.PackageManager
+import android.os.Handler
+import android.os.HandlerExecutor
 import android.os.UserHandle
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.lifecycle.AndroidViewModel
@@ -40,12 +44,13 @@ class ServiceViewModel(private val application: Application): AndroidViewModel(a
         get() = _sidebarAppList.asStateFlow()
     private val _sidebarAppList = MutableStateFlow<List<AppInfo>>(emptyList())
 
-    private val recentAppList = MutableStateFlow<List<AppInfo>>(emptyList())
+    private val predictedAppList = MutableStateFlow<List<AppInfo>>(emptyList())
 
-    private val launcherApps: LauncherApps = application.getSystemService(Context.LAUNCHER_APPS_SERVICE) as LauncherApps
-    private val usageStatsManager = application.getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
+    private val launcherApps = application.getSystemService(Context.LAUNCHER_APPS_SERVICE) as LauncherApps
+    private val appPredictionManager = application.getSystemService(AppPredictionManager::class.java)
 
-    private val lastTimeUsedComparator = LastTimeUsedComparator()
+    private lateinit var appPredictor: AppPredictor
+    private val handlerExecutor = HandlerExecutor(Handler())
 
     val allAppActivity = AppInfo(
         "",
@@ -92,29 +97,55 @@ class ServiceViewModel(private val application: Application): AndroidViewModel(a
         }
     }
 
+    private val appPredictionCallback = object : AppPredictor.Callback {
+        override fun onTargetsAvailable(targets: List<AppTarget>) {
+            logger.d("appPredictionCallback targets: $targets")
+            predictedAppList.value = targets
+                .take(MAX_PREDICTED_APPS)
+                .mapNotNull { target ->
+                    runCatching {
+                        val info = application.packageManager.getApplicationInfo(target.packageName, PackageManager.GET_ACTIVITIES)
+                        val launchIntent = application.packageManager.getLaunchIntentForPackage(target.packageName)
+                        val userId = UserHandleHidden.getUserId(target.user)
+                        AppInfo(
+                            info.loadLabel(application.packageManager).toString(),
+                            info.loadIcon(application.packageManager),
+                            info.packageName,
+                            launchIntent!!.component!!.className,
+                            userId
+                        )
+                    }.onFailure { e ->
+                        logger.e("failed to add $target: ", e)
+                    }.getOrNull()
+                }
+        }
+    }
+
     companion object {
         private const val ALL_APP_PACKAGE = "com.libremobileos.sidebar"
         private const val ALL_APP_ACTIVITY = "com.libremobileos.sidebar.ui.all_app.AllAppActivity"
-        private const val MAX_RECENT_APPS = 5
+        private const val MAX_PREDICTED_APPS = 6
     }
 
     init {
         logger.d("init")
         initSidebarAppList()
         launcherApps.registerCallback(launcherAppsCallback)
+        registerAppPredictionCallback()
     }
 
     override fun onCleared() {
         logger.d("onCleared")
         launcherApps.unregisterCallback(launcherAppsCallback)
+        appPredictor.unregisterPredictionUpdates(appPredictionCallback)
     }
 
     private fun initSidebarAppList() {
         viewModelScope.launch(Dispatchers.IO) {
             repository.getAllSidebarAppsByFlow()
-                .combine(recentAppList) { sidebarApps, recentApps ->
+                .combine(predictedAppList) { sidebarApps, predictedApps ->
                     mutableListOf<AppInfo>().apply {
-                        logger.d("sidebarApps=$sidebarApps recentApps=$recentApps")
+                        logger.d("sidebarApps=$sidebarApps predictedApps=$predictedApps")
                         sidebarApps?.forEach { entity ->
                             runCatching {
                                 val info = application.packageManager.getApplicationInfo(entity.packageName, PackageManager.GET_ACTIVITIES)
@@ -136,9 +167,7 @@ class ServiceViewModel(private val application: Application): AndroidViewModel(a
                             }
                         }
                         addAll(
-                            recentApps
-                                .filter { sidebarApps?.contains(it)?.not() ?: true }
-                                .take(MAX_RECENT_APPS)
+                            predictedApps.filter { sidebarApps?.contains(it)?.not() ?: true }
                         )
                     }
                 }
@@ -149,44 +178,15 @@ class ServiceViewModel(private val application: Application): AndroidViewModel(a
         }
     }
 
-    private suspend fun updateRecentAppListFlow() {
-        val currentTime = System.currentTimeMillis()
-        val startTime = currentTime - 1000 * 60 * 60
-        val usageStatsList = usageStatsManager.queryUsageStats(
-            UsageStatsManager.INTERVAL_DAILY,
-            startTime,
-            currentTime
+    private fun registerAppPredictionCallback() {
+        appPredictor = appPredictionManager.createAppPredictionSession(
+            AppPredictionContext.Builder(application.applicationContext)
+                .setUiSurface("hotseat")
+                .setPredictedTargetCount(MAX_PREDICTED_APPS)
+                .build()
         )
-        logger.d("updateRecentAppListFlow: size=${usageStatsList.size}")
-
-        val recentList = ArrayList<AppInfo>()
-        usageStatsList
-            .sortedWith(lastTimeUsedComparator)
-            .forEach { usageStats ->
-                runCatching {
-                    val info = application.packageManager.getApplicationInfo(usageStats.packageName, PackageManager.GET_ACTIVITIES)
-                    val launchIntent = application.packageManager.getLaunchIntentForPackage(usageStats.packageName)
-                    if (launchIntent != null && launchIntent.component != null) {
-                        val appInfo = AppInfo(
-                            "${info.loadLabel(application.packageManager)}",
-                            info.loadIcon(application.packageManager),
-                            info.packageName,
-                            launchIntent.component!!.className,
-                            0
-                        )
-                        recentList.add(appInfo)
-                    }
-                }.onFailure {
-                    logger.e("updateRecentAppListFlow failed: $it")
-                }
-        }
-        recentAppList.value = recentList.toList()
-    }
-
-    fun refreshRecentAppList() {
-        viewModelScope.launch(Dispatchers.IO) {
-            updateRecentAppListFlow()
-        }
+        appPredictor.registerPredictionUpdates(handlerExecutor, appPredictionCallback)
+        appPredictor.requestPredictionUpdate()
     }
 
     fun getIntSp(name: String, defaultValue: Int): Int {
@@ -210,12 +210,6 @@ class ServiceViewModel(private val application: Application): AndroidViewModel(a
 
     fun unregisterSpChangeListener(listener: OnSharedPreferenceChangeListener) {
         sp.unregisterOnSharedPreferenceChangeListener(listener)
-    }
-
-    private inner class LastTimeUsedComparator : Comparator<UsageStats> {
-        override fun compare(a: UsageStats, b: UsageStats): Int {
-            return (b.lastTimeUsed - a.lastTimeUsed).toInt()
-        }
     }
 }
 

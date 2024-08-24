@@ -113,8 +113,6 @@ class SidebarView(
             false
         }
 
-        viewModel.refreshRecentAppList()
-
         runCatching {
             lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_START)
             windowManager.addView(composeView, layoutParams)
