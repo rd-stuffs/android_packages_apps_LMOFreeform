@@ -15,21 +15,21 @@
 //
 
 filegroup {
-    name: "mifreeform-display-adapter-java",
+    name: "lmofreeform-display-adapter-java",
     srcs: [
-        "java/com/android/server/display/MiFreeformDisplayAdapter.java",
+        "java/com/android/server/display/LMOFreeformDisplayAdapter.java",
     ],
     visibility: ["//frameworks/base/services/core"],
 }
 
 java_library_static {
-    name: "mifreeform-server",
+    name: "lmofreeform-server",
     libs: ["services.core"],
     static_libs: [
         "androidx.core_core-ktx",
     ],
     srcs: [
-        "java/io/sunshine0523/freeform/**/*.java",
-        "java/io/sunshine0523/freeform/**/*.kt",
+        "java/com/libremobileos/**/*.java",
+        "java/com/libremobileos/**/*.kt",
     ]
 }

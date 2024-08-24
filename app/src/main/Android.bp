@@ -15,7 +15,7 @@
 //
 
 android_app {
-    name: "MiFreeform",
+    name: "LMOFreeform",
     srcs: [
         "java/**/*.kt",
     ],

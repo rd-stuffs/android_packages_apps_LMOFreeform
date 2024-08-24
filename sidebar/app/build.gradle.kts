@@ -7,7 +7,7 @@ plugins {
 }
 
 android {
-    namespace = "io.sunshine0523.sidebar"
+    namespace = "com.libremobileos.sidebar"
     compileSdk = 34
 
     buildFeatures {
@@ -20,7 +20,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "io.sunshine0523.sidebar"
+        applicationId = "com.libremobileos.sidebar"
         minSdk = 34
         targetSdk = 34
         versionCode = 1

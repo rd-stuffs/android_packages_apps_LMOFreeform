@@ -20,8 +20,8 @@
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
 
--keepclasseswithmembers class com.sunshine.freeform.Main {
+-keepclasseswithmembers class com.libremobileos.freeform.server.Main {
     public static void main(java.lang.String[]);
 }
 
--keep class io.sunshine0523.freeform.util.Settings {*;}
+-keep class com.libremobileos.freeform.server.util.Settings {*;}

@@ -20,4 +20,4 @@
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
 
--keep class io.sunshine0523.sidebar.hook.HookWindowManager
+-keep class com.libremobileos.sidebar.hook.HookWindowManager

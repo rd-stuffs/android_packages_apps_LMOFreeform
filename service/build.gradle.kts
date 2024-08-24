@@ -4,7 +4,7 @@ plugins {
 }
 
 android {
-    namespace = "com.sunshine.freeform"
+    namespace = "com.libremobileos.freeform"
 
     buildFeatures {
         aidl = true

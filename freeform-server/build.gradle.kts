@@ -8,7 +8,7 @@ plugins {
 }
 
 android {
-    namespace = "com.sunshine.freeform"
+    namespace = "com.libremobileos.freeform.server"
 
     buildFeatures {
         aidl = true
@@ -39,7 +39,7 @@ zygote {
     val moduleName = "Mi-Freeform"
     val moduleDescription = "Mi-Freeform"
     val moduleAuthor = "KindBrave"
-    val moduleEntrypoint = "io.sunshine0523.freeform.ZygoteMain"
+    val moduleEntrypoint = "com.libremobileos.freeform.server.ZygoteMain"
 
     packages(ZygoteLoader.PACKAGE_SYSTEM_SERVER)
 
