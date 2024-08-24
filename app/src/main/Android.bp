@@ -28,4 +28,13 @@ android_app {
         "androidx-constraintlayout_constraintlayout",
         "androidx.cardview_cardview",
     ],
+    required: ["privapp_allowlist_com.libremobileos.freeform"],
+}
+
+prebuilt_etc {
+    name: "privapp_allowlist_com.libremobileos.freeform",
+    src: "privapp_allowlist_com.libremobileos.freeform.xml",
+    system_ext_specific: true,
+    sub_dir: "permissions",
+    filename_from_src: true,
 }
