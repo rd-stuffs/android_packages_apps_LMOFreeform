@@ -13,6 +13,7 @@ import android.view.WindowManager
 import android.widget.Toast
 import androidx.appcompat.content.res.AppCompatResources
 import com.libremobileos.sidebar.R
+import com.libremobileos.sidebar.app.SidebarApplication
 import com.libremobileos.sidebar.utils.Logger
 
 class SidebarService : Service(), SharedPreferences.OnSharedPreferenceChangeListener,
@@ -21,8 +22,10 @@ class SidebarService : Service(), SharedPreferences.OnSharedPreferenceChangeList
     private lateinit var viewModel: ServiceViewModel
     private lateinit var windowManager: WindowManager
     private lateinit var sidebarView: SidebarView
+    private lateinit var sharedPrefs: SharedPreferences
     private var showSideline = false
-    private var showSidebar = false
+    private var isShowingSidebar = false
+    private var isShowingSideline = false
     private var sidelinePositionX = 0
     private var sidelinePositionY = 0
     private var screenWidth = 0
@@ -65,15 +68,16 @@ class SidebarService : Service(), SharedPreferences.OnSharedPreferenceChangeList
         windowManager = getSystemService(Context.WINDOW_SERVICE) as WindowManager
         screenWidth = resources.displayMetrics.widthPixels
         screenHeight = resources.displayMetrics.heightPixels
-        viewModel.registerSpChangeListener(this)
+        sharedPrefs = application.applicationContext.getSharedPreferences(SidebarApplication.CONFIG, Context.MODE_PRIVATE)
+        sharedPrefs.registerOnSharedPreferenceChangeListener(this)
         sidebarView = SidebarView(this@SidebarService, viewModel, object : SidebarView.Callback {
             override fun onRemove() {
                 logger.d("sidebar view removed")
-                if (showSidebar) animateShowSideline()
-                showSidebar = false
+                if (isShowingSidebar && showSideline) animateShowSideline()
+                isShowingSidebar = false
             }
         })
-        showSideline = viewModel.getBooleanSp(SIDELINE, false)
+        showSideline = sharedPrefs.getBoolean(SIDELINE, false)
         logger.d("screenWidth=$screenWidth screenHeight=$screenHeight showSideline=$showSideline")
         if (showSideline) showView()
         return START_STICKY
@@ -88,18 +92,19 @@ class SidebarService : Service(), SharedPreferences.OnSharedPreferenceChangeList
 
     override fun onDestroy() {
         super.onDestroy()
-        if (this::viewModel.isInitialized) viewModel.unregisterSpChangeListener(this)
-        removeView()
+        sharedPrefs.unregisterOnSharedPreferenceChangeListener(this)
+        removeView(force = true)
+        viewModel.destroy()
     }
 
     override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences, key: String?) {
         when (key) {
             SIDELINE -> {
-                showSideline = viewModel.getBooleanSp(SIDELINE, false)
+                showSideline = sharedPrefs.getBoolean(SIDELINE, false)
                 if (showSideline) {
                     showView()
                 } else {
-                    removeView()
+                    removeView(force = true)
                 }
             }
         }
@@ -108,7 +113,7 @@ class SidebarService : Service(), SharedPreferences.OnSharedPreferenceChangeList
     override fun showSidebar() {
         logger.d("showSidebar")
         sidebarView.showView()
-        showSidebar = true
+        isShowingSidebar = true
         animateHideSideline()
     }
 
@@ -142,11 +147,11 @@ class SidebarService : Service(), SharedPreferences.OnSharedPreferenceChangeList
             width = SIDELINE_WIDTH
         }
         updateViewLayout()
-        viewModel.setIntSp(SIDELINE_POSITION_X, sidelinePositionX)
+        setIntSp(SIDELINE_POSITION_X, sidelinePositionX)
         if (resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT) {
-            viewModel.setIntSp(SIDELINE_POSITION_Y_PORTRAIT, layoutParams.y)
+            setIntSp(SIDELINE_POSITION_Y_PORTRAIT, layoutParams.y)
         } else {
-            viewModel.setIntSp(SIDELINE_POSITION_Y_LANDSCAPE, layoutParams.y)
+            setIntSp(SIDELINE_POSITION_Y_LANDSCAPE, layoutParams.y)
         }
     }
 
@@ -155,14 +160,16 @@ class SidebarService : Service(), SharedPreferences.OnSharedPreferenceChangeList
      */
     @SuppressLint("ClickableViewAccessibility")
     private fun showView() {
+        if (isShowingSideline) return
+
         logger.d("showView")
-        removeView()
-        sidelinePositionX = viewModel.getIntSp(SIDELINE_POSITION_X, 1)
+        sidelinePositionX = sharedPrefs.getInt(SIDELINE_POSITION_X, 1)
         sidelinePositionY =
             if (resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT)
-                viewModel.getIntSp(SIDELINE_POSITION_Y_PORTRAIT, -screenHeight / 6)
+                sharedPrefs.getInt(SIDELINE_POSITION_Y_PORTRAIT, -screenHeight / 6)
             else
-                viewModel.getIntSp(SIDELINE_POSITION_Y_LANDSCAPE, -screenHeight / 6)
+                sharedPrefs.getInt(SIDELINE_POSITION_Y_LANDSCAPE, -screenHeight / 6)
+
         runCatching {
             layoutParams.apply {
                 type = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
@@ -179,6 +186,8 @@ class SidebarService : Service(), SharedPreferences.OnSharedPreferenceChangeList
                 windowAnimations = android.R.style.Animation_Dialog
             }
             windowManager.addView(sideLineView, layoutParams)
+            viewModel.registerCallbacks()
+            isShowingSideline = true
         }.onFailure { e ->
             logger.e("failed to add sideline view: ", e)
         }
@@ -192,19 +201,20 @@ class SidebarService : Service(), SharedPreferences.OnSharedPreferenceChangeList
         }
     }
 
-    private fun removeView() {
+    private fun removeView(force: Boolean = false) {
+        if (!isShowingSideline && !force) return
+
         logger.d("removeView")
+        viewModel.unregisterCallbacks()
+
         runCatching {
             windowManager.removeViewImmediate(sideLineView)
         }.onFailure { e ->
-            logger.d("failed to remove sideline view: ", e)
+            logger.e("failed to remove sideline view: $e")
         }
 
-        runCatching {
-            sidebarView.removeView()
-        }.onFailure { e ->
-            logger.d("failed to remove sidebar view: ", e)
-        }
+        sidebarView.removeView(force)
+        isShowingSideline = false
     }
 
     private fun animateHideSideline() {
@@ -215,5 +225,12 @@ class SidebarService : Service(), SharedPreferences.OnSharedPreferenceChangeList
     private fun animateShowSideline() {
         logger.d("animateShowSideline")
         sideLineView.animate().translationX(0f).setDuration(300).start()
+    }
+
+    private fun setIntSp(name: String, value: Int) {
+        sharedPrefs.edit().apply {
+            putInt(name, value)
+            apply()
+        }
     }
 }

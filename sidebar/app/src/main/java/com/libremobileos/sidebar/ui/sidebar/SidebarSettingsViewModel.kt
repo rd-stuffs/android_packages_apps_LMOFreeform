@@ -6,7 +6,10 @@ import android.content.pm.LauncherApps
 import android.os.UserHandle
 import android.os.UserManager
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
 import com.libremobileos.sidebar.app.SidebarApplication
 import com.libremobileos.sidebar.bean.SidebarAppInfo
 import com.libremobileos.sidebar.room.DatabaseRepository
@@ -46,7 +49,6 @@ class SidebarSettingsViewModel(private val application: Application) : AndroidVi
 
     override fun onCleared() {
         logger.d("onCleared")
-        super.onCleared()
     }
 
     fun getSidebarEnabled(): Boolean =
@@ -91,6 +93,16 @@ class SidebarSettingsViewModel(private val application: Application) : AndroidVi
             Collections.sort(allAppList, appComparator)
             _appList.value = allAppList
             logger.d("emitted allAppList: $allAppList")
+        }
+    }
+
+    companion object {
+        val Factory = viewModelFactory {
+            initializer {
+                SidebarSettingsViewModel(
+                    this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY]!!
+                )
+            }
         }
     }
 

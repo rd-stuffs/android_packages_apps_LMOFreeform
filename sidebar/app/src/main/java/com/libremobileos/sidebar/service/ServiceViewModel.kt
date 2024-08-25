@@ -6,7 +6,6 @@ import android.app.prediction.AppPredictionManager
 import android.app.prediction.AppPredictor
 import android.app.prediction.AppTarget
 import android.content.Context
-import android.content.SharedPreferences.OnSharedPreferenceChangeListener
 import android.content.pm.LauncherApps
 import android.content.pm.PackageManager
 import android.os.Handler
@@ -24,6 +23,8 @@ import com.libremobileos.sidebar.utils.Logger
 import com.libremobileos.sidebar.utils.contains
 import com.libremobileos.sidebar.utils.getInfo
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -38,7 +39,6 @@ class ServiceViewModel(private val application: Application): AndroidViewModel(a
     private val logger = Logger("ServiceViewModel")
 
     private val repository = DatabaseRepository(application)
-    private val sp = application.applicationContext.getSharedPreferences(SidebarApplication.CONFIG, Context.MODE_PRIVATE)
 
     val sidebarAppListFlow: StateFlow<List<AppInfo>>
         get() = _sidebarAppList.asStateFlow()
@@ -51,6 +51,7 @@ class ServiceViewModel(private val application: Application): AndroidViewModel(a
 
     private lateinit var appPredictor: AppPredictor
     private val handlerExecutor = HandlerExecutor(Handler())
+    private var callbacksRegistered = false
 
     val allAppActivity = AppInfo(
         "",
@@ -129,15 +130,40 @@ class ServiceViewModel(private val application: Application): AndroidViewModel(a
 
     init {
         logger.d("init")
+    }
+
+    fun registerCallbacks() {
+        if (callbacksRegistered) return
+        logger.d("registerCallbacks")
         initSidebarAppList()
         launcherApps.registerCallback(launcherAppsCallback)
         registerAppPredictionCallback()
+        callbacksRegistered = true
     }
 
-    override fun onCleared() {
-        logger.d("onCleared")
+    fun unregisterCallbacks() {
+        if (!callbacksRegistered) return
+        logger.d("unregisterCallbacks")
         launcherApps.unregisterCallback(launcherAppsCallback)
         appPredictor.unregisterPredictionUpdates(appPredictionCallback)
+        viewModelScope.coroutineContext.cancelChildren()
+        callbacksRegistered = false
+    }
+
+    fun destroy() {
+        logger.d("destroy")
+        runCatching { viewModelScope.cancel() }
+    }
+
+    private fun registerAppPredictionCallback() {
+        appPredictor = appPredictionManager.createAppPredictionSession(
+            AppPredictionContext.Builder(application.applicationContext)
+                .setUiSurface("hotseat")
+                .setPredictedTargetCount(MAX_PREDICTED_APPS)
+                .build()
+        )
+        appPredictor.registerPredictionUpdates(handlerExecutor, appPredictionCallback)
+        appPredictor.requestPredictionUpdate()
     }
 
     private fun initSidebarAppList() {
@@ -176,40 +202,6 @@ class ServiceViewModel(private val application: Application): AndroidViewModel(a
                     _sidebarAppList.value = sidebarAppList.toList()
                 }
         }
-    }
-
-    private fun registerAppPredictionCallback() {
-        appPredictor = appPredictionManager.createAppPredictionSession(
-            AppPredictionContext.Builder(application.applicationContext)
-                .setUiSurface("hotseat")
-                .setPredictedTargetCount(MAX_PREDICTED_APPS)
-                .build()
-        )
-        appPredictor.registerPredictionUpdates(handlerExecutor, appPredictionCallback)
-        appPredictor.requestPredictionUpdate()
-    }
-
-    fun getIntSp(name: String, defaultValue: Int): Int {
-        return sp.getInt(name, defaultValue)
-    }
-
-    fun getBooleanSp(name: String, defaultValue: Boolean): Boolean {
-        return sp.getBoolean(name, defaultValue)
-    }
-
-    fun setIntSp(name: String, value: Int) {
-        sp.edit().apply {
-            putInt(name, value)
-            apply()
-        }
-    }
-
-    fun registerSpChangeListener(listener: OnSharedPreferenceChangeListener) {
-        sp.registerOnSharedPreferenceChangeListener(listener)
-    }
-
-    fun unregisterSpChangeListener(listener: OnSharedPreferenceChangeListener) {
-        sp.unregisterOnSharedPreferenceChangeListener(listener)
     }
 }
 

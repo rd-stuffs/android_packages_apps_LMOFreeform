@@ -7,7 +7,10 @@ import android.content.pm.PackageManager
 import android.os.UserHandle
 import android.os.UserManager
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
 import com.libremobileos.sidebar.bean.AppInfo
 import com.libremobileos.sidebar.systemapi.UserHandleHidden
 import com.libremobileos.sidebar.utils.Logger
@@ -132,6 +135,16 @@ class AllAppViewModel(private val application: Application): AndroidViewModel(ap
             }
             Collections.sort(allAppList, appComparator)
             _appList.value = allAppList.toList()
+        }
+    }
+
+    companion object {
+        val Factory = viewModelFactory {
+            initializer {
+                AllAppViewModel(
+                    this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY]!!
+                )
+            }
         }
     }
 
