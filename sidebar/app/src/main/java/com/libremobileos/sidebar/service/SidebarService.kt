@@ -62,7 +62,7 @@ class SidebarService : Service(), SharedPreferences.OnSharedPreferenceChangeList
                 showSidebar = false
             }
         })
-        showSideline = viewModel.getBooleanSp(SIDELINE, true)
+        showSideline = viewModel.getBooleanSp(SIDELINE, false)
         if (showSideline) showView()
         return START_STICKY
     }
@@ -82,7 +82,7 @@ class SidebarService : Service(), SharedPreferences.OnSharedPreferenceChangeList
     override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences, key: String?) {
         when (key) {
             SIDELINE -> {
-                showSideline = viewModel.getBooleanSp(SIDELINE, true)
+                showSideline = viewModel.getBooleanSp(SIDELINE, false)
                 if (showSideline) {
                     showView()
                 } else {
@@ -90,7 +90,7 @@ class SidebarService : Service(), SharedPreferences.OnSharedPreferenceChangeList
                 }
             }
             SIDELINE_POSITION_X -> {
-                sidelinePositionX = viewModel.getIntSp(SIDELINE_POSITION_X, -1)
+                sidelinePositionX = viewModel.getIntSp(SIDELINE_POSITION_X, 1)
                 updateView()
             }
             SIDELINE_POSITION_Y_PORTRAIT -> {
@@ -151,7 +151,7 @@ class SidebarService : Service(), SharedPreferences.OnSharedPreferenceChangeList
     @SuppressLint("ClickableViewAccessibility")
     private fun showView() {
         removeView()
-        sidelinePositionX = viewModel.getIntSp(SIDELINE_POSITION_X, -1)
+        sidelinePositionX = viewModel.getIntSp(SIDELINE_POSITION_X, 1)
         sidelinePositionY =
             if (resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT)
                 viewModel.getIntSp(SIDELINE_POSITION_Y_PORTRAIT, -screenHeight / 6)
