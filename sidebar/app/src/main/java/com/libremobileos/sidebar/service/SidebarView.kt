@@ -49,7 +49,6 @@ class SidebarView(
     private val logger = Logger(TAG)
 
     companion object {
-        private const val SIDELINE_POSITION_X = "sideline_position_x"
         private const val OFFSET_X = 90
         private const val PACKAGE = "com.libremobileos.freeform"
         private const val ACTION = "com.libremobileos.freeform.START_FREEFORM"
@@ -81,9 +80,9 @@ class SidebarView(
             (screenHeight * 0.8f).roundToInt()
         }
 
-        sidebarPositionX = viewModel.getIntSp(SIDELINE_POSITION_X, 1)
+        sidebarPositionX = viewModel.getIntSp(SidebarService.SIDELINE_POSITION_X, 1)
         sidebarPositionY = if (context.resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT) {
-            -screenHeight / 6
+            viewModel.getIntSp(SidebarService.SIDELINE_POSITION_Y_PORTRAIT, -screenHeight / 6)
         } else {
             0
         }

@@ -41,9 +41,9 @@ class SidebarService : Service(), SharedPreferences.OnSharedPreferenceChangeList
 
         //是否展示侧边条
         const val SIDELINE = "sideline"
-        private const val SIDELINE_POSITION_X = "sideline_position_x"
-        private const val SIDELINE_POSITION_Y_PORTRAIT = "sideline_position_y_portrait"
-        private const val SIDELINE_POSITION_Y_LANDSCAPE = "sideline_position_y_landscape"
+        const val SIDELINE_POSITION_X = "sideline_position_x"
+        const val SIDELINE_POSITION_Y_PORTRAIT = "sideline_position_y_portrait"
+        const val SIDELINE_POSITION_Y_LANDSCAPE = "sideline_position_y_landscape"
     }
 
     override fun onBind(intent: Intent): IBinder? {
