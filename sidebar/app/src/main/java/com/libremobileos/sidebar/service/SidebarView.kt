@@ -81,7 +81,7 @@ class SidebarView(
             (screenHeight * 0.8f).roundToInt()
         }
 
-        sidebarPositionX = viewModel.getIntSp(SIDELINE_POSITION_X, -1)
+        sidebarPositionX = viewModel.getIntSp(SIDELINE_POSITION_X, 1)
         sidebarPositionY = if (context.resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT) {
             -screenHeight / 6
         } else {

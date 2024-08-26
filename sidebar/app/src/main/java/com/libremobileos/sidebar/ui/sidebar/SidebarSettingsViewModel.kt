@@ -50,7 +50,7 @@ class SidebarSettingsViewModel(private val application: Application) : AndroidVi
     }
 
     fun getSidebarEnabled(): Boolean =
-        sp.getBoolean(SidebarService.SIDELINE, true)
+        sp.getBoolean(SidebarService.SIDELINE, false)
 
     fun setSidebarEnabled(enabled: Boolean) =
         sp.edit()
