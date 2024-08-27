@@ -25,6 +25,7 @@ import com.libremobileos.freeform.server.ui.FreeformWindowManager;
 public class LMOFreeformUIService extends ILMOFreeformUIService.Stub {
 
     private static final String TAG = "LMOFreeform/LMOFreeformUIService";
+    private static final String SERVICE_NAME = "lmo_freeform";
 
     private Context systemContext = null;
     private DisplayManagerInternal displayManager = null;
@@ -41,18 +42,16 @@ public class LMOFreeformUIService extends ILMOFreeformUIService.Stub {
         // this.uiHandler = displayManager.getUiHandler();
         // this.handler = displayManager.getHandler();
 
-        SystemServiceHolder.init(() -> {
-            try {
-                ServiceManager.addService("lmo_freeform", this);
-                Map<String, IBinder> cache = new ArrayMap<>();
-                cache.put("lmo_freeform", this);
-                ServiceManager.initServiceCache(cache);
-                Slog.i(TAG, "add lmo_freeform SystemService: " + ServiceManager.getService("lmo_freeform"));
-            } catch (Exception e) {
-                Slog.e(TAG, "add lmo_freeform service failed, " + e);
-            }
-            if (ServiceManager.getService("lmo_freeform") == null) return;
-        });
+        SystemServiceHolder.init();
+        try {
+            ServiceManager.addService(SERVICE_NAME, this);
+            Map<String, IBinder> cache = new ArrayMap<>();
+            cache.put(SERVICE_NAME, this);
+            ServiceManager.initServiceCache(cache);
+            Slog.i(TAG, "add SystemService: " + ServiceManager.getService(SERVICE_NAME));
+        } catch (Exception e) {
+            Slog.e(TAG, "add " + SERVICE_NAME + " service failed: " + e);
+        }
     }
 
     @Override
