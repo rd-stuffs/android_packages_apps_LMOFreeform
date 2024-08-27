@@ -20,7 +20,6 @@ class FreeformTaskStackListener(
 ) : ITaskStackListener.Stub() {
 
     var taskId = -1
-    var listenTaskRemoved = false
 
     companion object {
         private const val TAG = "LMOFreeform/FreeformTaskStackListener"
@@ -78,10 +77,9 @@ class FreeformTaskStackListener(
     }
 
     override fun onTaskRemoved(taskId: Int) {
-        if (listenTaskRemoved) {
+        if (this.taskId == taskId) {
             Slog.d(TAG, "onTaskRemoved $taskId")
-            SystemServiceHolder.activityTaskManager.unregisterTaskStackListener(this)
-            LMOFreeformServiceHolder.releaseFreeform(window)
+            window.destroy("onTaskRemoved")
         }
     }
 
@@ -109,13 +107,11 @@ class FreeformTaskStackListener(
     }
 
     override fun onTaskRemovalStarted(taskInfo: ActivityManager.RunningTaskInfo?) {
-        val taskId = taskInfo?.taskId ?: return
-        Slog.d(TAG, "onTaskRemovalStarted")
         if (this.taskId == taskId) {
-            window.destroy("onTaskRemovalStarted", false)
+            Slog.d(TAG, "onTaskRemovalStarted $taskId")
+            window.removeView()
         }
     }
-
 
     override fun onTaskProfileLocked(taskInfo: ActivityManager.RunningTaskInfo, userId: Int) {
 
@@ -131,7 +127,8 @@ class FreeformTaskStackListener(
 
     override fun onTaskDisplayChanged(taskId: Int, newDisplayId: Int) {
         if (taskId == this.taskId && newDisplayId == Display.DEFAULT_DISPLAY) {
-            window.destroy("onTaskDisplayChanged", false)
+            window.removeView()
+            window.destroy("onTaskDisplayChanged")
         }
     }
 

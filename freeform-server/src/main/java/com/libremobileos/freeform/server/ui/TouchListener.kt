@@ -43,7 +43,7 @@ class MoveTouchListener(
 
 class LeftViewClickListener(private val window: FreeformWindow) : View.OnClickListener {
     override fun onClick(v: View) {
-        window.destroy("LeftViewClickListener")
+        window.close()
     }
 
 }
@@ -63,7 +63,9 @@ class LeftViewLongClickListener(private val window: FreeformWindow): View.OnLong
             }
             runCatching { SystemServiceHolder.activityTaskManager.moveRootTaskToDisplay(window.freeformTaskStackListener!!.taskId, Display.DEFAULT_DISPLAY) }
         }
-        window.destroy("LeftViewLongClickListener", false)
+        // not required because taskStackListener's onTaskDisplayChanged() will be called
+        // which in turn calls destroy()
+        // window.destroy("MaximizeButtonClickListener")
         return true
     }
 }

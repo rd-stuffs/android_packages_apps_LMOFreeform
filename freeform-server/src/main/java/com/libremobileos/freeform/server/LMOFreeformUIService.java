@@ -78,7 +78,7 @@ public class LMOFreeformUIService extends ILMOFreeformUIService.Stub {
         if (Binder.getCallingUid() != SYSTEM_UID) {
             throw new SecurityException("Caller must be system");
         }
-        FreeformWindowManager.removeWindow(freeformId);
+        FreeformWindowManager.removeWindow(freeformId, true /*close*/);
     }
 
     @Override

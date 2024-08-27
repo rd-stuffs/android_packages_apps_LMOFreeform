@@ -100,12 +100,12 @@ class FreeformWindow(
             freeformTaskStackListener = FreeformTaskStackListener(displayId, this)
             SystemServiceHolder.activityTaskManager.registerTaskStackListener(freeformTaskStackListener)
             if (appConfig.userId == -100) {
-                if (appConfig.pendingIntent == null) destroy("onDisplayAdd:userId=-100, but pendingIntent is null", false)
+                if (appConfig.pendingIntent == null) destroy("onDisplayAdd:userId=-100, but pendingIntent is null")
                 else {
                     LMOFreeformServiceHolder.startPendingIntent(appConfig.pendingIntent, displayId)
                 }
             } else {
-                if (LMOFreeformServiceHolder.startApp(context, appConfig, displayId).not()) destroy("onDisplayAdd:startApp failed", false)
+                if (LMOFreeformServiceHolder.startApp(context, appConfig, displayId).not()) destroy("onDisplayAdd:startApp failed")
             }
 
             val rightView = resourceHolder.getLayoutChildViewByTag<View>(freeformLayout, "rightView")
@@ -329,19 +329,29 @@ class FreeformWindow(
         }
     }
 
-    fun destroy(callReason: String, removeTask: Boolean = true) {
-        Slog.i(TAG, "destroy ${getFreeformId()}, displayId=$displayId, callReason: $callReason")
+    fun close() {
+        Slog.d(TAG, "close()")
+        runCatching {
+            SystemServiceHolder.activityTaskManager.removeTask(freeformTaskStackListener!!.taskId)
+        }.onFailure { exception ->
+            Slog.e(TAG, "removeTask failed: ", exception)
+            removeView()
+            destroy("window.close() fallback")
+        }
+    }
+
+    fun removeView() {
         handler.post {
             runCatching { windowManager.removeViewImmediate(freeformLayout) }
                 .onFailure { exception -> Slog.e(TAG, "removeView failed $exception") }
         }
-        if (removeTask) runCatching {
-            SystemServiceHolder.activityTaskManager.removeTask(freeformTaskStackListener!!.taskId)
-            freeformTaskStackListener?.listenTaskRemoved = true
-        }.onFailure { exception ->
-            Slog.e(TAG, "removeTask failed $exception")
-        }
+    }
+
+    fun destroy(callReason: String) {
+        Slog.i(TAG, "destroy ${getFreeformId()}, displayId=$displayId callReason: $callReason")
+        SystemServiceHolder.activityTaskManager.unregisterTaskStackListener(freeformTaskStackListener)
         SystemServiceHolder.windowManager.removeRotationWatcher(rotationWatcher)
+        LMOFreeformServiceHolder.releaseFreeform(this)
         FreeformWindowManager.removeWindow(getFreeformId())
     }
 }
