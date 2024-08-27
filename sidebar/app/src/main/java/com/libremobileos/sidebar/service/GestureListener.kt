@@ -56,7 +56,7 @@ class GestureListener(private val callback: Callback) : MGestureManager.MGesture
                     initialTouchY = event.rawY
                 }
             }
-            MotionEvent.ACTION_UP -> {
+            MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
                 longPressHandler.removeCallbacks(longPressRunnable)
                 isLongPress = false
                 callback.endMoveSideline()
