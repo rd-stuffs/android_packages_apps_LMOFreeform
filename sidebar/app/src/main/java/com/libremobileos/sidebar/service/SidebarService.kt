@@ -102,18 +102,6 @@ class SidebarService : Service(), SharedPreferences.OnSharedPreferenceChangeList
                     removeView()
                 }
             }
-            SIDELINE_POSITION_X -> {
-                sidelinePositionX = viewModel.getIntSp(SIDELINE_POSITION_X, 1)
-                updateView()
-            }
-            SIDELINE_POSITION_Y_PORTRAIT -> {
-                sidelinePositionY = viewModel.getIntSp(SIDELINE_POSITION_Y_PORTRAIT, -screenHeight / 6)
-                updateView()
-            }
-            SIDELINE_POSITION_Y_LANDSCAPE -> {
-                sidelinePositionY = viewModel.getIntSp(SIDELINE_POSITION_Y_LANDSCAPE, -screenHeight / 6)
-                updateView()
-            }
         }
     }
 
@@ -193,18 +181,6 @@ class SidebarService : Service(), SharedPreferences.OnSharedPreferenceChangeList
             windowManager.addView(sideLineView, layoutParams)
         }.onFailure { e ->
             logger.e("failed to add sideline view: ", e)
-        }
-    }
-
-    private fun updateView() {
-        runCatching {
-            layoutParams.apply {
-                x = sidelinePositionX * (screenWidth / 2 - OFFSET)
-                y = sidelinePositionY
-            }
-            windowManager.updateViewLayout(sideLineView, layoutParams)
-        }.onFailure { e ->
-            logger.e("failed to updateView: ", e)
         }
     }
 
