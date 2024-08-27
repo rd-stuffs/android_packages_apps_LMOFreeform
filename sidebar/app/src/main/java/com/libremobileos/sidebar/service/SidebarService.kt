@@ -83,7 +83,7 @@ class SidebarService : Service(), SharedPreferences.OnSharedPreferenceChangeList
         screenWidth = resources.displayMetrics.widthPixels
         screenHeight = resources.displayMetrics.heightPixels
         logger.d("onConfigChanged: screenWidth=$screenWidth height=$screenHeight")
-        showView()
+        if (showSideline) showView()
     }
 
     override fun onDestroy() {
