@@ -101,6 +101,9 @@ class SidebarView(
             windowAnimations = android.R.style.Animation_Dialog
         }
 
+        logger.d("showView: posX=$sidebarPositionX posY=$sidebarPositionY lp.x=${layoutParams.x}" +
+                " lp.y=${layoutParams.y} height=$sidebarHeight")
+
         composeView.translationX = sidebarPositionX * 1.0f * 200
 
         composeView.setOnTouchListener { view, event ->
@@ -116,12 +119,18 @@ class SidebarView(
             lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_START)
             windowManager.addView(composeView, layoutParams)
             composeView.animate().translationX(0f).setDuration(300).start()
+        }.onFailure {
+            logger.e("failed to add sidebar view: ", it)
         }
     }
 
     fun removeView() {
         lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_DESTROY)
-        runCatching { windowManager.removeViewImmediate(composeView) }
+        runCatching {
+            windowManager.removeViewImmediate(composeView)
+        }.onFailure {
+            logger.e("failed to remove sidebar view: ", it)
+        }
         callback.onRemove()
     }
 

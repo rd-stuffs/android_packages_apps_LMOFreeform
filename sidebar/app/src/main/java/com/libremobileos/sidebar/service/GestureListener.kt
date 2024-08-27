@@ -40,6 +40,7 @@ class GestureListener(private val callback: Callback) : MGestureManager.MGesture
     }
 
     override fun onTouchEvent(event: MotionEvent) {
+        logger.d("onTouchEvent action=${event.action} x=${event.rawX} y=${event.rawY}")
         when (event.action) {
             MotionEvent.ACTION_DOWN -> {
                 initialTouchX = event.rawX
@@ -50,7 +51,6 @@ class GestureListener(private val callback: Callback) : MGestureManager.MGesture
             }
             MotionEvent.ACTION_MOVE -> {
                 if (isLongPress) {
-                    logger.d("${event.rawX}")
                     callback.moveSideline((event.rawX - initialTouchX).toInt(), (event.rawY - initialTouchY).toInt(), event.rawX.toInt(), event.rawY.toInt())
                     initialTouchX = event.rawX
                     initialTouchY = event.rawY
