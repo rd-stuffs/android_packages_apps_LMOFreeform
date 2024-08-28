@@ -18,7 +18,6 @@ import com.libremobileos.sidebar.R
 import com.libremobileos.sidebar.app.SidebarApplication
 import com.libremobileos.sidebar.bean.AppInfo
 import com.libremobileos.sidebar.room.DatabaseRepository
-import com.libremobileos.sidebar.systemapi.UserHandleHidden
 import com.libremobileos.sidebar.utils.Logger
 import com.libremobileos.sidebar.utils.contains
 import com.libremobileos.sidebar.utils.getInfo
@@ -107,7 +106,7 @@ class ServiceViewModel(private val application: Application): AndroidViewModel(a
                     runCatching {
                         val info = application.packageManager.getApplicationInfo(target.packageName, PackageManager.GET_ACTIVITIES)
                         val launchIntent = application.packageManager.getLaunchIntentForPackage(target.packageName)
-                        val userId = UserHandleHidden.getUserId(target.user)
+                        val userId = target.user.identifier
                         AppInfo(
                             info.loadLabel(application.packageManager).toString(),
                             info.loadIcon(application.packageManager),

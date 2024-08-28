@@ -12,7 +12,6 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.libremobileos.sidebar.bean.AppInfo
-import com.libremobileos.sidebar.systemapi.UserHandleHidden
 import com.libremobileos.sidebar.utils.Logger
 import com.libremobileos.sidebar.utils.getInfo
 import kotlinx.coroutines.Dispatchers
@@ -57,7 +56,7 @@ class AllAppViewModel(private val application: Application): AndroidViewModel(ap
             runCatching {
                 val info = application.packageManager.getApplicationInfo(packageName, PackageManager.GET_ACTIVITIES)
                 val launchIntent = application.packageManager.getLaunchIntentForPackage(packageName)
-                val userId = UserHandleHidden.getUserId(user)
+                val userId = user.identifier
                 if (launchIntent != null && launchIntent.component != null) {
                     viewModelScope.launch(Dispatchers.IO) {
                         allAppList.add(
@@ -113,15 +112,11 @@ class AllAppViewModel(private val application: Application): AndroidViewModel(ap
     }
 
     private fun initAllAppList() {
-        val userHandleMap = HashMap<Int, UserHandle>()
-        userManager.userProfiles.forEach {
-            userHandleMap[UserHandleHidden.getUserId(it)] = it
-        }
         viewModelScope.launch(Dispatchers.IO) {
             userManager.userProfiles.forEach { userHandle ->
                 val list = launcherApps.getActivityList(null, userHandle)
-                list.forEach {info ->
-                    val userId = UserHandleHidden.getUserId(userHandle)
+                list.forEach { info ->
+                    val userId = userHandle.identifier
                     allAppList.add(
                         AppInfo(
                             "${info.label}${if (userId != 0) -userId else ""}",

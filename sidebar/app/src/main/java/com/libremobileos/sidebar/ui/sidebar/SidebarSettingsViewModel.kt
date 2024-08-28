@@ -14,7 +14,6 @@ import com.libremobileos.sidebar.app.SidebarApplication
 import com.libremobileos.sidebar.bean.SidebarAppInfo
 import com.libremobileos.sidebar.room.DatabaseRepository
 import com.libremobileos.sidebar.service.SidebarService
-import com.libremobileos.sidebar.systemapi.UserHandleHidden
 import com.libremobileos.sidebar.utils.Logger
 import com.libremobileos.sidebar.utils.contains
 import kotlinx.coroutines.Dispatchers
@@ -68,16 +67,12 @@ class SidebarSettingsViewModel(private val application: Application) : AndroidVi
     }
 
     private fun initAllAppList() {
-        val userHandleMap = HashMap<Int, UserHandle>()
-        userManager.userProfiles.forEach {
-            userHandleMap[UserHandleHidden.getUserId(it)] = it
-        }
         viewModelScope.launch(Dispatchers.IO) {
             val sidebarAppList = repository.getAllSidebarWithoutLiveData()
             userManager.userProfiles.forEach { userHandle ->
                 val list = launcherApps.getActivityList(null, userHandle)
-                list.forEach {info ->
-                    val userId = UserHandleHidden.getUserId(userHandle)
+                list.forEach { info ->
+                    val userId = userHandle.identifier
                     allAppList.add(
                         SidebarAppInfo(
                             "${info.label}${if (userId != 0) -userId else ""}",

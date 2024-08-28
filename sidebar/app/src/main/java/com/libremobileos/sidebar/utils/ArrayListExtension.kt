@@ -3,7 +3,6 @@ package com.libremobileos.sidebar.utils
 import android.os.UserHandle
 import com.libremobileos.sidebar.bean.AppInfo
 import com.libremobileos.sidebar.room.SidebarAppsEntity
-import com.libremobileos.sidebar.systemapi.UserHandleHidden
 
 /**
  * @author KindBrave
@@ -22,7 +21,7 @@ fun List<AppInfo>.getInfo(packageName: String, userHandle: UserHandle): AppInfo?
     for (item in this) {
         if (
             item.packageName == packageName &&
-            item.userId == UserHandleHidden.getUserId(userHandle)) return item
+            item.userId == userHandle.identifier) return item
     }
     return null
 }

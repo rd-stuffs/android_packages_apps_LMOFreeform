@@ -19,4 +19,3 @@ dependencyResolutionManagement {
 
 rootProject.name = "Sidebar"
 include(":app")
-include(":hidden-api")
