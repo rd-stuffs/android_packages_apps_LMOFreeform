@@ -97,18 +97,29 @@ class FreeformWindow(
     }
 
     override fun onDisplayAdd(displayId: Int) {
-        Slog.i(TAG, "onDisplayAdd displayId $displayId")
+        Slog.i(TAG, "onDisplayAdd displayId=$displayId, $appConfig")
         handler.post {
             this.displayId = displayId
             freeformTaskStackListener = FreeformTaskStackListener(displayId, this)
             SystemServiceHolder.activityTaskManager.registerTaskStackListener(freeformTaskStackListener)
-            if (appConfig.userId == -100) {
+            if (appConfig.taskId != -1) {
+                Slog.d(TAG, "moving taskId=${appConfig.taskId} to freeform display")
+                runCatching {
+                    SystemServiceHolder.activityTaskManager.moveRootTaskToDisplay(appConfig.taskId, displayId)
+                }
+                .onFailure { e ->
+                    Slog.e(TAG, "failed to move task, fallback to startApp", e)
+                    if (LMOFreeformServiceHolder.startApp(context, appConfig, displayId).not())
+                        destroy("onDisplayAdd:startApp failed")
+                }
+            } else if (appConfig.userId == -100) {
                 if (appConfig.pendingIntent == null) destroy("onDisplayAdd:userId=-100, but pendingIntent is null")
                 else {
                     LMOFreeformServiceHolder.startPendingIntent(appConfig.pendingIntent, displayId)
                 }
             } else {
-                if (LMOFreeformServiceHolder.startApp(context, appConfig, displayId).not()) destroy("onDisplayAdd:startApp failed")
+                if (LMOFreeformServiceHolder.startApp(context, appConfig, displayId).not())
+                    destroy("onDisplayAdd:startApp failed")
             }
 
             val rightView = resourceHolder.getLayoutChildViewByTag<View>(freeformLayout, "rightView")

@@ -7,5 +7,6 @@ data class AppConfig(
     val packageName: String,
     val activityName: String,
     val pendingIntent: PendingIntent?,
-    val userId: Int
+    val userId: Int,
+    val taskId: Int
 )

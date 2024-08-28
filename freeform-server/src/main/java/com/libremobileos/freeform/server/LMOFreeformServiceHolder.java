@@ -64,6 +64,7 @@ public class LMOFreeformServiceHolder {
     }
 
     public static boolean startApp(Context context, AppConfig appConfig, int displayId) {
+        Slog.d(TAG, "startApp $appConfig displayId=$displayId");
         try {
             Intent intent = new Intent();
             intent.setComponent(new ComponentName(appConfig.getPackageName(), appConfig.getActivityName()));

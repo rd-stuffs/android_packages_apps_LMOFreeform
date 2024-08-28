@@ -34,11 +34,13 @@ object LMOFreeformServiceManager {
         }
     }
 
-    fun createWindow(packageName: String, activityName: String, userId: Int, width: Int, height: Int, densityDpi: Int) {
+    fun createWindow(packageName: String, activityName: String, userId: Int, taskId: Int,
+            width: Int, height: Int, densityDpi: Int) {
         iLMOFreeformService?.startAppInFreeform(
             packageName,
             activityName,
             userId,
+            taskId,
             null,
             width,
             height,
@@ -51,6 +53,7 @@ object LMOFreeformServiceManager {
             pendingIntent?.creatorPackage?:"pendingIntentCreatorPackage",
             "unknownActivity-${Date().time}",
             -100,
+            -1,
             pendingIntent,
             width,
             height,

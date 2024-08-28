@@ -56,15 +56,15 @@ public class LMOFreeformUIService extends ILMOFreeformUIService.Stub {
 
     @Override
     public void startAppInFreeform(
-            String packageName, String activityName, int userId, PendingIntent pendingIntent,
-            int width, int height, int densityDpi) {
+            String packageName, String activityName, int userId, int taskId,
+            PendingIntent pendingIntent, int width, int height, int densityDpi) {
         if (Binder.getCallingUid() != SYSTEM_UID) {
             throw new SecurityException("Caller must be system");
         }
         Slog.i(TAG, "startAppInFreeform");
         FreeformWindowManager.addWindow(
                 handler, systemContext,
-                packageName, activityName, userId, pendingIntent,
+                packageName, activityName, userId, taskId, pendingIntent,
                 width, height, densityDpi);
     }
 

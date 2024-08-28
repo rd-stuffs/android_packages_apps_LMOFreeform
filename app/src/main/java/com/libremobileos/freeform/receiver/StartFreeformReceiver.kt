@@ -25,6 +25,7 @@ class StartFreeformReceiver : BroadcastReceiver() {
             val packageName = intent.getStringExtra("packageName")
             val activityName = intent.getStringExtra("activityName")
             val userId = intent.getIntExtra("userId", 0)
+            val taskId = intent.getIntExtra("taskId", -1)
 
             if (packageName != null && activityName != null) {
                 val sp = context.getSharedPreferences(LMOFreeform.CONFIG, Context.MODE_PRIVATE)
@@ -35,6 +36,7 @@ class StartFreeformReceiver : BroadcastReceiver() {
                     packageName,
                     activityName,
                     userId,
+                    taskId,
                     sp.getInt("freeform_width", (screenWidth * 0.8).roundToInt()),
                     sp.getInt("freeform_height", (screenHeight * 0.5).roundToInt()),
                     sp.getInt("freeform_dpi", screenDensityDpi),

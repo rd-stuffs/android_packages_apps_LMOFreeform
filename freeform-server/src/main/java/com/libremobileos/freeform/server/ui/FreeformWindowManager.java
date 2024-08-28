@@ -15,9 +15,9 @@ public class FreeformWindowManager {
 
     public static void addWindow(
             Handler handler, Context context,
-            String packageName, String activityName, int userId, PendingIntent pendingIntent,
-            int width, int height, int densityDpi) {
-        AppConfig appConfig = new AppConfig(packageName, activityName, pendingIntent, userId);
+            String packageName, String activityName, int userId, int taskId,
+            PendingIntent pendingIntent, int width, int height, int densityDpi) {
+        AppConfig appConfig = new AppConfig(packageName, activityName, pendingIntent, userId, taskId);
         FreeformConfig freeformConfig = new FreeformConfig(width, height, densityDpi);
         FreeformWindow window = new FreeformWindow(handler, context, appConfig, freeformConfig);
         Slog.d(TAG, "addWindow: " + packageName + "/" + activityName + ", freeformId=" + window.getFreeformId()
