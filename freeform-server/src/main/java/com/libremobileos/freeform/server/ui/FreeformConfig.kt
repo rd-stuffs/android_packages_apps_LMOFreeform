@@ -4,7 +4,7 @@ data class FreeformConfig @JvmOverloads constructor(
     var width: Int,
     var height: Int,
     var densityDpi: Int,
-    var secure: Boolean = false,
+    var secure: Boolean = true,
     var ownContentOnly: Boolean = true,
     var shouldShowSystemDecorations: Boolean = false,
     var refreshRate: Float = 60.0f,
