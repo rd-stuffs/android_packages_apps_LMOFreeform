@@ -42,13 +42,7 @@ object LMOFreeformServiceManager {
             null,
             width,
             height,
-            densityDpi,
-            120.0f,
-            false,
-            true,
-            false,
-            "com.libremobileos.freeform",
-            "view_freeform"
+            densityDpi
         )
     }
 
@@ -60,13 +54,7 @@ object LMOFreeformServiceManager {
             pendingIntent,
             width,
             height,
-            densityDpi,
-            120.0f,
-            false,
-            true,
-            false,
-            "com.libremobileos.freeform",
-            "view_freeform"
+            densityDpi
         )
     }
 

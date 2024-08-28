@@ -1,13 +1,14 @@
 package com.libremobileos.freeform.server.ui
 
-data class FreeformConfig(
+data class FreeformConfig @JvmOverloads constructor(
     var width: Int,
     var height: Int,
     var densityDpi: Int,
-    var secure: Boolean = true,
+    var secure: Boolean = false,
     var ownContentOnly: Boolean = true,
-    var shouldShowSystemDecorations: Boolean = true,
-    var refreshRate: Float,
+    var shouldShowSystemDecorations: Boolean = false,
+    var refreshRate: Float = 60.0f,
+    var presentationDeadlineNanos: Long = 1666666L,
     var hangUpWidth: Int = 300,
     var hangUpHeight: Int = 400,
     var isHangUp: Boolean = false,
@@ -15,12 +16,8 @@ data class FreeformConfig(
     var notInHangUpX: Int = 0,
     var notInHangUpY: Int = 0,
     //小窗屏幕宽高，与view的比例
-    var freeformWidth: Int,
-    var freeformHeight: Int,
+    var freeformWidth: Int = 1080,
+    var freeformHeight: Int = 1920,
     //小窗屏幕尺寸/小窗界面尺寸
-    var scale: Float
-) {
-    constructor(width: Int, height: Int, densityDpi: Int, secure: Boolean, ownContentOnly: Boolean, shouldShowSystemDecorations: Boolean, refreshRate: Float) : this(width, height, densityDpi, secure, ownContentOnly, shouldShowSystemDecorations, refreshRate, 300, 400, false, 0, 0, 1080, 1920, 1.0f) {
-
-    }
-}
+    var scale: Float = 1.0f
+)

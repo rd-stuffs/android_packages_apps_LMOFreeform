@@ -10,20 +10,16 @@ import android.util.Slog;
 import java.util.HashMap;
 
 public class FreeformWindowManager {
-    static String topWindow = "";
     private static final HashMap<String, FreeformWindow> freeformWindows = new HashMap<>(1);
     private static final String TAG = "FreeformWindowManager";
 
     public static void addWindow(
             Handler handler, Context context,
             String packageName, String activityName, int userId, PendingIntent pendingIntent,
-            int width, int height, int densityDpi, float refreshRate,
-            boolean secure, boolean ownContentOnly, boolean shouldShowSystemDecorations,
-            String resPkg, String layoutName) {
+            int width, int height, int densityDpi) {
         AppConfig appConfig = new AppConfig(packageName, activityName, pendingIntent, userId);
-        FreeformConfig freeformConfig = new FreeformConfig(width, height, densityDpi, secure, ownContentOnly, shouldShowSystemDecorations, refreshRate);
-        UIConfig uiConfig = new UIConfig(resPkg, layoutName);
-        FreeformWindow window = new FreeformWindow(handler, context, appConfig, freeformConfig, uiConfig);
+        FreeformConfig freeformConfig = new FreeformConfig(width, height, densityDpi);
+        FreeformWindow window = new FreeformWindow(handler, context, appConfig, freeformConfig);
         Slog.d(TAG, "addWindow: " + packageName + "/" + activityName + ", freeformId=" + window.getFreeformId()
                 + ", existing freeformWindows=" + freeformWindows);
 

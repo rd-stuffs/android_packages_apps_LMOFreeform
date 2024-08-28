@@ -8,6 +8,7 @@ import android.os.Build
 import android.os.Handler
 import android.util.Slog
 import android.view.Display
+import android.view.DisplayInfo
 import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.Surface
@@ -27,14 +28,13 @@ class FreeformWindow(
     val handler: Handler,
     val context: Context,
     private val appConfig: AppConfig,
-    val freeformConfig: FreeformConfig,
-    private val uiConfig: UIConfig,
+    val freeformConfig: FreeformConfig
 ): TextureView.SurfaceTextureListener, ILMOFreeformDisplayCallback.Stub(), View.OnTouchListener {
 
     var freeformTaskStackListener: FreeformTaskStackListener ?= null
     val windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
     val windowParams = WindowManager.LayoutParams()
-    private val resourceHolder = RemoteResourceHolder(context, uiConfig.resPkg)
+    private val resourceHolder = RemoteResourceHolder(context, FREEFORM_PACKAGE)
     lateinit var freeformLayout: ViewGroup
     lateinit var freeformRootView: ViewGroup
     lateinit var freeformView: TextureView
@@ -45,15 +45,18 @@ class FreeformWindow(
     var defaultDisplayHeight = context.resources.displayMetrics.heightPixels
     private val rotationWatcher = RotationWatcher(this)
     private val hangUpGestureListener = HangUpGestureListener(this)
+    private val defaultDisplayInfo = DisplayInfo()
 
     companion object {
         private const val TAG = "LMOFreeform/FreeformWindow"
+        private const val FREEFORM_PACKAGE = "com.libremobileos.freeform"
+        private const val FREEFORM_LAYOUT = "view_freeform"
     }
 
     init {
-        measureScale()
         if (LMOFreeformServiceHolder.ping()) {
             Slog.i(TAG, "FreeformWindow init")
+            populateFreeformConfig()
             handler.post { if (!addFreeformView()) destroy("init:addFreeform failed") }
         } else {
             destroy("init:service not running")
@@ -154,13 +157,20 @@ class FreeformWindow(
         )
         LMOFreeformServiceHolder.touch(newEvent, displayId)
         newEvent.recycle()
-        if (event.action == MotionEvent.ACTION_UP) checkWindowOnTop()
         return true
     }
 
     /**
      * get freeform screen dimen / freeform view dimen
      */
+    private fun populateFreeformConfig() {
+        measureScale()
+        context.display.getDisplayInfo(defaultDisplayInfo)
+        freeformConfig.refreshRate = defaultDisplayInfo.refreshRate
+        freeformConfig.presentationDeadlineNanos = defaultDisplayInfo.presentationDeadlineNanos
+        Slog.d(TAG, "populateFreeformConfig: $freeformConfig")
+    }
+
     fun measureScale() {
         val widthScale = min(defaultDisplayWidth, defaultDisplayHeight) * 1.0f / min(freeformConfig.width, freeformConfig.height)
         val heightScale = max(defaultDisplayWidth, defaultDisplayHeight) * 1.0f / max(freeformConfig.width, freeformConfig.height)
@@ -175,7 +185,7 @@ class FreeformWindow(
     @SuppressLint("WrongConstant")
     private fun addFreeformView(): Boolean {
         Slog.i(TAG, "addFreeformView")
-        val tmpFreeformLayout = resourceHolder.getLayout(uiConfig.layoutName) ?: return false
+        val tmpFreeformLayout = resourceHolder.getLayout(FREEFORM_LAYOUT)!! ?: return false
         freeformLayout = tmpFreeformLayout
         freeformRootView = resourceHolder.getLayoutChildViewByTag<FrameLayout>(freeformLayout, "freeform_root") ?: return false
         topBarView = resourceHolder.getLayoutChildViewByTag(freeformLayout, "topBarView") ?: return false
@@ -222,7 +232,6 @@ class FreeformWindow(
         SystemServiceHolder.windowManager.watchRotation(rotationWatcher, Display.DEFAULT_DISPLAY)
         runCatching {
             windowManager.addView(freeformLayout, windowParams)
-            FreeformWindowManager.topWindow = getFreeformId()
         }.onFailure {
             Slog.e(TAG, "addView failed: $it")
             return false
@@ -317,18 +326,6 @@ class FreeformWindow(
         return "${appConfig.packageName},${appConfig.activityName},${appConfig.userId}"
     }
 
-    fun checkWindowOnTop() {
-        if (getFreeformId() != FreeformWindowManager.topWindow) {
-            handler.post {
-                runCatching {
-                    windowManager.removeViewImmediate(freeformLayout)
-                    windowManager.addView(freeformLayout, windowParams)
-                    FreeformWindowManager.topWindow = getFreeformId()
-                }
-            }
-        }
-    }
-
     fun close() {
         Slog.d(TAG, "close()")
         runCatching {
@@ -341,6 +338,7 @@ class FreeformWindow(
     }
 
     fun removeView() {
+        Slog.d(TAG, "removeView()")
         handler.post {
             runCatching { windowManager.removeViewImmediate(freeformLayout) }
                 .onFailure { exception -> Slog.e(TAG, "removeView failed $exception") }

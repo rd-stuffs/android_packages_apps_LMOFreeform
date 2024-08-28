@@ -59,7 +59,7 @@ public class LMOFreeformServiceHolder {
                 freeformConfig.getShouldShowSystemDecorations(),
                 surface,
                 freeformConfig.getRefreshRate(),
-                1666666L
+                freeformConfig.getPresentationDeadlineNanos()
                 );
     }
 

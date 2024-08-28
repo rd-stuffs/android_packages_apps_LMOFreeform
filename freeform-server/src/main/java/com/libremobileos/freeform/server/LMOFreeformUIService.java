@@ -57,9 +57,7 @@ public class LMOFreeformUIService extends ILMOFreeformUIService.Stub {
     @Override
     public void startAppInFreeform(
             String packageName, String activityName, int userId, PendingIntent pendingIntent,
-            int width, int height, int densityDpi, float refreshRate,
-            boolean secure, boolean ownContentOnly, boolean shouldShowSystemDecorations,
-            String resPkg, String layoutName) {
+            int width, int height, int densityDpi) {
         if (Binder.getCallingUid() != SYSTEM_UID) {
             throw new SecurityException("Caller must be system");
         }
@@ -67,9 +65,7 @@ public class LMOFreeformUIService extends ILMOFreeformUIService.Stub {
         FreeformWindowManager.addWindow(
                 handler, systemContext,
                 packageName, activityName, userId, pendingIntent,
-                width, height, densityDpi, refreshRate,
-                secure, ownContentOnly, shouldShowSystemDecorations,
-                resPkg, layoutName);
+                width, height, densityDpi);
     }
 
     @Override
@@ -83,8 +79,9 @@ public class LMOFreeformUIService extends ILMOFreeformUIService.Stub {
     @Override
     public void createFreeformInUser(
             String name, int width, int height, int densityDpi, float refreshRate,
-            boolean secure, boolean ownContentOnly, boolean shouldShowSystemDecorations,
-            Surface surface, ILMOFreeformDisplayCallback callback
+            long presentationDeadlineNanos, boolean secure, boolean ownContentOnly,
+            boolean shouldShowSystemDecorations, Surface surface,
+            ILMOFreeformDisplayCallback callback
     ) {
         if (Binder.getCallingUid() != SYSTEM_UID) {
             throw new SecurityException("Caller must be system");
@@ -93,7 +90,7 @@ public class LMOFreeformUIService extends ILMOFreeformUIService.Stub {
                 name, callback,
                 width, height, densityDpi,
                 secure, ownContentOnly, shouldShowSystemDecorations,
-                surface, refreshRate, 1666666L
+                surface, refreshRate, presentationDeadlineNanos
         );
     }
 

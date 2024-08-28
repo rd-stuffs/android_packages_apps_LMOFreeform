@@ -25,12 +25,14 @@ import java.util.logging.FileHandler
 import java.util.logging.Logger
 import java.util.logging.SimpleFormatter
 
+private const val MAIN_TAG = "LMOFreeform"
+
 class Logger {
     private val TAG: String
     private val LOGGER: Logger?
 
     constructor(TAG: String) {
-        this.TAG = TAG
+        this.TAG = "${MAIN_TAG}/${TAG}"
         LOGGER = null
     }
 
@@ -47,7 +49,7 @@ class Logger {
     }
 
     fun isLoggable(tag: String?, level: Int): Boolean {
-        return true
+        return Log.isLoggable(MAIN_TAG, level) || Log.isLoggable(tag, level)
     }
 
     fun v(msg: String?) {
