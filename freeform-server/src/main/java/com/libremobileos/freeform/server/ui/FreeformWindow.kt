@@ -17,6 +17,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
 import android.widget.FrameLayout
+import com.android.server.LocalServices
+import com.android.server.wm.WindowManagerInternal
 import com.libremobileos.freeform.ILMOFreeformDisplayCallback
 import com.libremobileos.freeform.server.LMOFreeformServiceHolder
 import com.libremobileos.freeform.server.SystemServiceHolder
@@ -29,10 +31,12 @@ class FreeformWindow(
     val context: Context,
     private val appConfig: AppConfig,
     val freeformConfig: FreeformConfig
-): TextureView.SurfaceTextureListener, ILMOFreeformDisplayCallback.Stub(), View.OnTouchListener {
+): TextureView.SurfaceTextureListener, ILMOFreeformDisplayCallback.Stub(), View.OnTouchListener,
+    WindowManagerInternal.DisplaySecureContentListener {
 
     var freeformTaskStackListener: FreeformTaskStackListener ?= null
     val windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
+    val windowManagerInt = LocalServices.getService(WindowManagerInternal::class.java)
     val windowParams = WindowManager.LayoutParams()
     private val resourceHolder = RemoteResourceHolder(context, FREEFORM_PACKAGE)
     lateinit var freeformLayout: ViewGroup
@@ -130,6 +134,22 @@ class FreeformWindow(
             }
             rightView.setOnClickListener(RightViewClickListener(displayId))
             rightView.setOnLongClickListener(RightViewLongClickListener(this))
+        }
+    }
+
+    override fun onDisplayHasSecureWindowOnScreenChanged(displayId: Int, hasSecureWindowOnScreen: Boolean) {
+        if (displayId != this.displayId) return;
+        Slog.d(TAG, "onDisplayHasSecureWindowOnScreenChanged: $hasSecureWindowOnScreen")
+        windowParams.apply {
+            flags = if (hasSecureWindowOnScreen) {
+                flags or WindowManager.LayoutParams.FLAG_SECURE
+            } else {
+                flags xor WindowManager.LayoutParams.FLAG_SECURE
+            }
+        }
+        handler.post {
+            runCatching { windowManager.updateViewLayout(freeformLayout, windowParams) }
+                .onFailure { Slog.e(TAG, "updateViewLayout failed: $it") }
         }
     }
 
@@ -236,13 +256,13 @@ class FreeformWindow(
                     WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
                     WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED or
                     WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM
-            if (freeformConfig.secure) flags = flags or WindowManager.LayoutParams.FLAG_SECURE
             format = PixelFormat.RGBA_8888
             windowAnimations = android.R.style.Animation_Dialog
         }
         SystemServiceHolder.windowManager.watchRotation(rotationWatcher, Display.DEFAULT_DISPLAY)
         runCatching {
             windowManager.addView(freeformLayout, windowParams)
+            windowManagerInt.registerDisplaySecureContentListener(this)
         }.onFailure {
             Slog.e(TAG, "addView failed: $it")
             return false
@@ -362,5 +382,6 @@ class FreeformWindow(
         SystemServiceHolder.windowManager.removeRotationWatcher(rotationWatcher)
         LMOFreeformServiceHolder.releaseFreeform(this)
         FreeformWindowManager.removeWindow(getFreeformId())
+        windowManagerInt.unregisterDisplaySecureContentListener(this)
     }
 }
