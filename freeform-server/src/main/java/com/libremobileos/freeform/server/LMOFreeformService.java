@@ -1,5 +1,7 @@
 package com.libremobileos.freeform.server;
 
+import static com.libremobileos.freeform.server.Debug.dlog;
+
 import android.hardware.display.DisplayManagerInternal;
 import android.util.Slog;
 import android.view.InputEvent;
@@ -24,7 +26,7 @@ public class LMOFreeformService {
                 width, height, densityDpi, secure,
                 ownContentOnly, shouldShowSystemDecorations, surface,
                 refreshRate, presentationDeadlineNanos);
-        Slog.d(TAG, "createFreeform");
+        dlog(TAG, "createFreeform");
     }
 
     public void injectInputEvent(InputEvent event, int displayId) {

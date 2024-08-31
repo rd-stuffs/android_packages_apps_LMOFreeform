@@ -9,6 +9,7 @@ import android.view.Display
 import android.view.Surface
 import android.window.TaskSnapshot
 import androidx.annotation.RequiresApi
+import com.libremobileos.freeform.server.Debug.dlog
 import com.libremobileos.freeform.server.LMOFreeformServiceHolder
 import com.libremobileos.freeform.server.SystemServiceHolder
 import kotlin.math.max
@@ -78,7 +79,7 @@ class FreeformTaskStackListener(
 
     override fun onTaskRemoved(taskId: Int) {
         if (this.taskId == taskId) {
-            Slog.d(TAG, "onTaskRemoved $taskId")
+            dlog(TAG, "onTaskRemoved $taskId")
             window.destroy("onTaskRemoved")
         }
     }
@@ -90,7 +91,7 @@ class FreeformTaskStackListener(
             // if (FreeformWindowManager.settings.showImeInFreeform) {
             //     SystemServiceHolder.windowManager.setDisplayImePolicy(displayId, 0)
             // }
-            Slog.d(TAG, "onTaskMovedToFront $taskInfo")
+            dlog(TAG, "onTaskMovedToFront $taskInfo")
         }
     }
 
@@ -98,7 +99,7 @@ class FreeformTaskStackListener(
         val displayId = taskInfo?.displayId ?: return
         if (this.displayId == displayId) {
             taskId = taskInfo.taskId
-            Slog.d(TAG, "onTaskDescriptionChanged $taskInfo")
+            dlog(TAG, "onTaskDescriptionChanged $taskInfo")
         }
     }
 
@@ -108,7 +109,7 @@ class FreeformTaskStackListener(
 
     override fun onTaskRemovalStarted(taskInfo: ActivityManager.RunningTaskInfo?) {
         if (this.taskId == taskId) {
-            Slog.d(TAG, "onTaskRemovalStarted $taskId")
+            dlog(TAG, "onTaskRemovalStarted $taskId")
             window.removeView()
         }
     }
@@ -145,7 +146,7 @@ class FreeformTaskStackListener(
     }
 
     override fun onTaskRequestedOrientationChanged(taskId: Int, requestedOrientation: Int) {
-        Slog.d(TAG, "onTaskRequestedOrientationChanged $taskId $requestedOrientation")
+        dlog(TAG, "onTaskRequestedOrientationChanged $taskId $requestedOrientation")
         if (taskId == this.taskId) {
             val max = max(window.freeformConfig.width, window.freeformConfig.height)
             val min = min(window.freeformConfig.width, window.freeformConfig.height)
@@ -153,14 +154,14 @@ class FreeformTaskStackListener(
             val minHangUp = min(window.freeformConfig.hangUpWidth, window.freeformConfig.hangUpHeight)
             when (requestedOrientation) {
                 PORTRAIT -> {
-                    Slog.d(TAG, "PORTRAIT")
+                    dlog(TAG, "PORTRAIT")
                     window.freeformConfig.width = min
                     window.freeformConfig.height = max
                     window.freeformConfig.hangUpWidth = minHangUp
                     window.freeformConfig.hangUpHeight = maxHangUp
                 }
                 LANDSCAPE_1, LANDSCAPE_2 -> {
-                    Slog.d(TAG, "LANDSCAPE")
+                    dlog(TAG, "LANDSCAPE")
                     window.freeformConfig.width = max
                     window.freeformConfig.height = min
                     window.freeformConfig.hangUpWidth = maxHangUp

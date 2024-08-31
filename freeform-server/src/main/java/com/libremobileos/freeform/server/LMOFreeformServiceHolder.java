@@ -1,5 +1,7 @@
 package com.libremobileos.freeform.server;
 
+import static com.libremobileos.freeform.server.Debug.dlog;
+
 import android.app.ActivityThread;
 import android.app.IApplicationThread;
 import android.annotation.SuppressLint;
@@ -64,7 +66,7 @@ public class LMOFreeformServiceHolder {
     }
 
     public static boolean startApp(Context context, AppConfig appConfig, int displayId) {
-        Slog.d(TAG, "startApp $appConfig displayId=$displayId");
+        dlog(TAG, "startApp $appConfig displayId=$displayId");
         try {
             Intent intent = new Intent();
             intent.setComponent(new ComponentName(appConfig.getPackageName(), appConfig.getActivityName()));

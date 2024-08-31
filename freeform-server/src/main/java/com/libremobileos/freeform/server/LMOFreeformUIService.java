@@ -61,7 +61,7 @@ public class LMOFreeformUIService extends ILMOFreeformUIService.Stub {
         if (Binder.getCallingUid() != SYSTEM_UID) {
             throw new SecurityException("Caller must be system");
         }
-        Slog.i(TAG, "startAppInFreeform");
+        Slog.d(TAG, "startAppInLMOFreeform: " + packageName + "/" + activityName + ", taskId=" + taskId);
         FreeformWindowManager.addWindow(
                 handler, systemContext,
                 packageName, activityName, userId, taskId, pendingIntent,

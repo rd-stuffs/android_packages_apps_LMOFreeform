@@ -1,5 +1,7 @@
 package com.libremobileos.freeform.server.ui;
 
+import static com.libremobileos.freeform.server.Debug.dlog;
+
 import android.app.PendingIntent;
 import android.content.ComponentName;
 import android.content.Context;
@@ -20,7 +22,7 @@ public class FreeformWindowManager {
         AppConfig appConfig = new AppConfig(packageName, activityName, pendingIntent, userId, taskId);
         FreeformConfig freeformConfig = new FreeformConfig(width, height, densityDpi);
         FreeformWindow window = new FreeformWindow(handler, context, appConfig, freeformConfig);
-        Slog.d(TAG, "addWindow: " + packageName + "/" + activityName + ", freeformId=" + window.getFreeformId()
+        dlog(TAG, "addWindow: " + packageName + "/" + activityName + ", freeformId=" + window.getFreeformId()
                 + ", existing freeformWindows=" + freeformWindows);
 
         // if freeform exist, remove old

@@ -20,6 +20,7 @@ import android.widget.FrameLayout
 import com.android.server.LocalServices
 import com.android.server.wm.WindowManagerInternal
 import com.libremobileos.freeform.ILMOFreeformDisplayCallback
+import com.libremobileos.freeform.server.Debug.dlog
 import com.libremobileos.freeform.server.LMOFreeformServiceHolder
 import com.libremobileos.freeform.server.SystemServiceHolder
 import kotlin.math.max
@@ -81,7 +82,7 @@ class FreeformWindow(
     }
 
     override fun onSurfaceTextureAvailable(surfaceTexture: SurfaceTexture, width: Int, height: Int) {
-        Slog.i(TAG, "onSurfaceTextureAvailable width:$width height:$height")
+        dlog(TAG, "onSurfaceTextureAvailable width:$width height:$height")
         if (displayId < 0) {
             LMOFreeformServiceHolder.createDisplay(freeformConfig, appConfig, Surface(surfaceTexture), this)
         }
@@ -107,7 +108,7 @@ class FreeformWindow(
             freeformTaskStackListener = FreeformTaskStackListener(displayId, this)
             SystemServiceHolder.activityTaskManager.registerTaskStackListener(freeformTaskStackListener)
             if (appConfig.taskId != -1) {
-                Slog.d(TAG, "moving taskId=${appConfig.taskId} to freeform display")
+                dlog(TAG, "moving taskId=${appConfig.taskId} to freeform display")
                 runCatching {
                     SystemServiceHolder.activityTaskManager.moveRootTaskToDisplay(appConfig.taskId, displayId)
                 }
@@ -139,7 +140,7 @@ class FreeformWindow(
 
     override fun onDisplayHasSecureWindowOnScreenChanged(displayId: Int, hasSecureWindowOnScreen: Boolean) {
         if (displayId != this.displayId) return;
-        Slog.d(TAG, "onDisplayHasSecureWindowOnScreenChanged: $hasSecureWindowOnScreen")
+        dlog(TAG, "onDisplayHasSecureWindowOnScreenChanged: $hasSecureWindowOnScreen")
         windowParams.apply {
             flags = if (hasSecureWindowOnScreen) {
                 flags or WindowManager.LayoutParams.FLAG_SECURE
@@ -199,7 +200,7 @@ class FreeformWindow(
         context.display.getDisplayInfo(defaultDisplayInfo)
         freeformConfig.refreshRate = defaultDisplayInfo.refreshRate
         freeformConfig.presentationDeadlineNanos = defaultDisplayInfo.presentationDeadlineNanos
-        Slog.d(TAG, "populateFreeformConfig: $freeformConfig")
+        dlog(TAG, "populateFreeformConfig: $freeformConfig")
     }
 
     fun measureScale() {
@@ -214,8 +215,8 @@ class FreeformWindow(
      * Called in system handler
      */
     @SuppressLint("WrongConstant")
-    private fun addFreeformView(): Boolean {
-        Slog.i(TAG, "addFreeformView")
+    private fun addFreeformView() {
+        dlog(TAG, "addFreeformView")
         val tmpFreeformLayout = resourceHolder.getLayout(FREEFORM_LAYOUT)!! ?: return false
         freeformLayout = tmpFreeformLayout
         freeformRootView = resourceHolder.getLayoutChildViewByTag<FrameLayout>(freeformLayout, "freeform_root") ?: return false
@@ -358,7 +359,7 @@ class FreeformWindow(
     }
 
     fun close() {
-        Slog.d(TAG, "close()")
+        dlog(TAG, "close()")
         runCatching {
             SystemServiceHolder.activityTaskManager.removeTask(freeformTaskStackListener!!.taskId)
         }.onFailure { exception ->
@@ -369,7 +370,7 @@ class FreeformWindow(
     }
 
     fun removeView() {
-        Slog.d(TAG, "removeView()")
+        dlog(TAG, "removeView()")
         handler.post {
             runCatching { windowManager.removeViewImmediate(freeformLayout) }
                 .onFailure { exception -> Slog.e(TAG, "removeView failed $exception") }
