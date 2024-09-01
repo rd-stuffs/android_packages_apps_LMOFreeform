@@ -21,7 +21,7 @@ import com.libremobileos.freeform.ILMOFreeformDisplayCallback;
 public class LMOFreeformDisplayAdapter extends DisplayAdapter {
     private static final String TAG = "LMOFreeform/LMOFreeformDisplayAdapter";
     // Unique id prefix for freeform displays.
-    private static final String UNIQUE_ID_PREFIX = "lmo-freeform:";
+    public static final String UNIQUE_ID_PREFIX = "lmo-freeform:";
 
     private final ArrayMap<IBinder, FreeformDisplayDevice> mFreeformDisplayDevices =
             new ArrayMap<>();
