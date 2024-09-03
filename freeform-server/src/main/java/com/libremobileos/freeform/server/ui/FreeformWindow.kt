@@ -35,7 +35,7 @@ class FreeformWindow(
 ): TextureView.SurfaceTextureListener, ILMOFreeformDisplayCallback.Stub(), View.OnTouchListener,
     WindowManagerInternal.DisplaySecureContentListener {
 
-    var freeformTaskStackListener: FreeformTaskStackListener ?= null
+    var freeformTaskStackListener: FreeformTaskStackListener? = null
     val windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
     val windowManagerInt = LocalServices.getService(WindowManagerInternal::class.java)
     val windowParams = WindowManager.LayoutParams()
@@ -51,11 +51,13 @@ class FreeformWindow(
     private val rotationWatcher = RotationWatcher(this)
     private val hangUpGestureListener = HangUpGestureListener(this)
     private val defaultDisplayInfo = DisplayInfo()
+    private val destroyRunnable = Runnable { destroy("destroyRunnable") }
 
     companion object {
         private const val TAG = "LMOFreeform/FreeformWindow"
         private const val FREEFORM_PACKAGE = "com.libremobileos.freeform"
         private const val FREEFORM_LAYOUT = "view_freeform"
+        private const val WINDOW_DESTROY_WAIT_MS = 10000L
     }
 
     init {
@@ -109,13 +111,16 @@ class FreeformWindow(
             SystemServiceHolder.activityTaskManager.registerTaskStackListener(freeformTaskStackListener)
             if (appConfig.taskId != -1) {
                 dlog(TAG, "moving taskId=${appConfig.taskId} to freeform display")
+                freeformTaskStackListener!!.taskId = appConfig.taskId
                 runCatching {
+                    if (SystemServiceHolder.activityTaskManager.getTaskDescription(appConfig.taskId) == null) {
+                        throw Exception("stale task")
+                    }
                     SystemServiceHolder.activityTaskManager.moveRootTaskToDisplay(appConfig.taskId, displayId)
                 }
                 .onFailure { e ->
-                    Slog.e(TAG, "failed to move task, fallback to startApp", e)
-                    if (LMOFreeformServiceHolder.startApp(context, appConfig, displayId).not())
-                        destroy("onDisplayAdd:startApp failed")
+                    Slog.e(TAG, "failed to move task ${appConfig.taskId}: $e, fallback to startApp")
+                    startApp()
                 }
             } else if (appConfig.userId == -100) {
                 if (appConfig.pendingIntent == null) destroy("onDisplayAdd:userId=-100, but pendingIntent is null")
@@ -123,8 +128,7 @@ class FreeformWindow(
                     LMOFreeformServiceHolder.startPendingIntent(appConfig.pendingIntent, displayId)
                 }
             } else {
-                if (LMOFreeformServiceHolder.startApp(context, appConfig, displayId).not())
-                    destroy("onDisplayAdd:startApp failed")
+                startApp()
             }
 
             val rightView = resourceHolder.getLayoutChildViewByTag<View>(freeformLayout, "rightView")
@@ -136,6 +140,15 @@ class FreeformWindow(
             rightView.setOnClickListener(RightViewClickListener(displayId))
             rightView.setOnLongClickListener(RightViewLongClickListener(this))
         }
+    }
+
+    private fun startApp() {
+        if (displayId == Display.INVALID_DISPLAY) {
+            Slog.e(TAG, "cannot startApp: displayId not yet set!")
+            return
+        }
+        if (LMOFreeformServiceHolder.startApp(context, appConfig, displayId).not())
+            destroy("startApp failed")
     }
 
     override fun onDisplayHasSecureWindowOnScreenChanged(displayId: Int, hasSecureWindowOnScreen: Boolean) {
@@ -362,23 +375,33 @@ class FreeformWindow(
         dlog(TAG, "close()")
         runCatching {
             SystemServiceHolder.activityTaskManager.removeTask(freeformTaskStackListener!!.taskId)
+            removeView()
         }.onFailure { exception ->
             Slog.e(TAG, "removeTask failed: ", exception)
-            removeView()
             destroy("window.close() fallback")
         }
     }
 
-    fun removeView() {
-        dlog(TAG, "removeView()")
+    fun removeView(runDestroy: Boolean = true) {
+        dlog(TAG, "removeView($runDestroy)")
+        handler.removeCallbacks(destroyRunnable)
         handler.post {
-            runCatching { windowManager.removeViewImmediate(freeformLayout) }
-                .onFailure { exception -> Slog.e(TAG, "removeView failed $exception") }
+            runCatching {
+                windowManager.removeViewImmediate(freeformLayout)
+                dlog(TAG, "removeView success")
+            }.onFailure { exception ->
+                Slog.e(TAG, "removeView failed $exception")
+            }
         }
+        // wait for onTaskRemoved(), but take it into our own hands in case its never triggered.
+        if (runDestroy)
+            handler.postDelayed(destroyRunnable, WINDOW_DESTROY_WAIT_MS)
     }
 
     fun destroy(callReason: String) {
         Slog.i(TAG, "destroy ${getFreeformId()}, displayId=$displayId callReason: $callReason")
+        removeView(false)
+        handler.removeCallbacks(destroyRunnable)
         SystemServiceHolder.activityTaskManager.unregisterTaskStackListener(freeformTaskStackListener)
         SystemServiceHolder.windowManager.removeRotationWatcher(rotationWatcher)
         LMOFreeformServiceHolder.releaseFreeform(this)
