@@ -78,6 +78,8 @@ class SidebarView(
 
     @SuppressLint("ClickableViewAccessibility")
     fun showView() {
+        if (isShowing) return
+
         val screenWidth = context.resources.displayMetrics.widthPixels
         val screenHeight = context.resources.displayMetrics.heightPixels
         val sidebarHeight = if (context.resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT) {
