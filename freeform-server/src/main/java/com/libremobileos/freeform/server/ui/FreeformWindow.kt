@@ -228,7 +228,7 @@ class FreeformWindow(
      * Called in system handler
      */
     @SuppressLint("WrongConstant")
-    private fun addFreeformView() {
+    private fun addFreeformView(): Boolean {
         dlog(TAG, "addFreeformView")
         val tmpFreeformLayout = resourceHolder.getLayout(FREEFORM_LAYOUT)!! ?: return false
         freeformLayout = tmpFreeformLayout
