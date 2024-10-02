@@ -86,8 +86,11 @@ class SidebarService : Service(), SharedPreferences.OnSharedPreferenceChangeList
     override fun onConfigurationChanged(newConfig: Configuration) {
         screenWidth = resources.displayMetrics.widthPixels
         screenHeight = resources.displayMetrics.heightPixels
-        logger.d("onConfigChanged: screenWidth=$screenWidth height=$screenHeight")
-        if (showSideline) showView()
+        logger.d("onConfigChanged: screenWidth=$screenWidth height=$screenHeight isShowingSideline=$isShowingSideline")
+        if (isShowingSideline) {
+            updateSidelinePosition()
+            updateViewLayout()
+        }
     }
 
     override fun onDestroy() {
@@ -163,6 +166,35 @@ class SidebarService : Service(), SharedPreferences.OnSharedPreferenceChangeList
         if (isShowingSideline) return
 
         logger.d("showView")
+
+        layoutParams.apply {
+            type = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
+            width = SIDELINE_WIDTH
+            height = SIDELINE_HEIGHT
+            flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+                    WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
+                    WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS or
+                    WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED
+            privateFlags = WindowManager.LayoutParams.SYSTEM_FLAG_SHOW_FOR_ALL_USERS or
+                    WindowManager.LayoutParams.PRIVATE_FLAG_IS_ROUNDED_CORNERS_OVERLAY or
+                    WindowManager.LayoutParams.PRIVATE_FLAG_USE_BLAST or
+                    WindowManager.LayoutParams.PRIVATE_FLAG_TRUSTED_OVERLAY or
+                    WindowManager.LayoutParams.PRIVATE_FLAG_SYSTEM_APPLICATION_OVERLAY
+            format = PixelFormat.RGBA_8888
+            windowAnimations = android.R.style.Animation_Dialog
+        }
+        updateSidelinePosition()
+
+        runCatching {
+            windowManager.addView(sideLineView, layoutParams)
+            viewModel.registerCallbacks()
+            isShowingSideline = true
+        }.onFailure { e ->
+            logger.e("failed to add sideline view: ", e)
+        }
+    }
+
+    private fun updateSidelinePosition() {
         sidelinePositionX = sharedPrefs.getInt(SIDELINE_POSITION_X, 1)
         sidelinePositionY =
             if (resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT)
@@ -170,26 +202,9 @@ class SidebarService : Service(), SharedPreferences.OnSharedPreferenceChangeList
             else
                 sharedPrefs.getInt(SIDELINE_POSITION_Y_LANDSCAPE, -screenHeight / 6)
 
-        runCatching {
-            layoutParams.apply {
-                type = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
-                width = SIDELINE_WIDTH
-                height = SIDELINE_HEIGHT
-                x = sidelinePositionX * (screenWidth / 2 - OFFSET)
-                y = sidelinePositionY
-                flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
-                        WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
-                        WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS or
-                        WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED
-                privateFlags = WindowManager.LayoutParams.SYSTEM_FLAG_SHOW_FOR_ALL_USERS or WindowManager.LayoutParams.PRIVATE_FLAG_IS_ROUNDED_CORNERS_OVERLAY or WindowManager.LayoutParams.PRIVATE_FLAG_USE_BLAST or WindowManager.LayoutParams.PRIVATE_FLAG_TRUSTED_OVERLAY
-                format = PixelFormat.RGBA_8888
-                windowAnimations = android.R.style.Animation_Dialog
-            }
-            windowManager.addView(sideLineView, layoutParams)
-            viewModel.registerCallbacks()
-            isShowingSideline = true
-        }.onFailure { e ->
-            logger.e("failed to add sideline view: ", e)
+        layoutParams.apply {
+            x = sidelinePositionX * (screenWidth / 2 - OFFSET)
+            y = sidelinePositionY
         }
     }
 
