@@ -103,10 +103,13 @@ class SidebarView(
             height = sidebarHeight
             x = sidebarPositionX * (screenWidth / 2 - OFFSET_X)
             y = sidebarPositionY
-            flags = LayoutParams.FLAG_LAYOUT_NO_LIMITS or
+            flags = LayoutParams.FLAG_LAYOUT_IN_SCREEN or
                     LayoutParams.FLAG_HARDWARE_ACCELERATED
+            privateFlags = LayoutParams.PRIVATE_FLAG_TRUSTED_OVERLAY or
+                    LayoutParams.PRIVATE_FLAG_SYSTEM_APPLICATION_OVERLAY
             format = PixelFormat.RGBA_8888
             windowAnimations = android.R.style.Animation_Dialog
+            layoutInDisplayCutoutMode = LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_NEVER
         }
 
         logger.d("showView: posX=$sidebarPositionX posY=$sidebarPositionY lp.x=${layoutParams.x}" +

@@ -7,9 +7,11 @@ import android.content.Intent
 import android.content.SharedPreferences
 import android.content.res.Configuration
 import android.graphics.PixelFormat
+import android.graphics.Rect
 import android.os.IBinder
 import android.view.View
 import android.view.WindowManager
+import android.view.WindowManager.LayoutParams
 import android.widget.Toast
 import androidx.appcompat.content.res.AppCompatResources
 import com.libremobileos.sidebar.R
@@ -30,7 +32,7 @@ class SidebarService : Service(), SharedPreferences.OnSharedPreferenceChangeList
     private var sidelinePositionY = 0
     private var screenWidth = 0
     private var screenHeight = 0
-    private val layoutParams = WindowManager.LayoutParams()
+    private val layoutParams = LayoutParams()
     private val sideLineView by lazy {
         val gestureManager = MGestureManager(this@SidebarService, GestureListener(this@SidebarService))
         View(this).apply {
@@ -42,6 +44,12 @@ class SidebarService : Service(), SharedPreferences.OnSharedPreferenceChangeList
         }
     }
 
+    private val isPortrait: Boolean
+        get() = resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT
+
+    private val offset: Int
+        get() = if (isPortrait) OFFSET_PORTRAIT else OFFSET_LANDSCAPE
+
     companion object {
         private const val TAG = "SidebarService"
         private const val SIDELINE_WIDTH = 100
@@ -49,7 +57,8 @@ class SidebarService : Service(), SharedPreferences.OnSharedPreferenceChangeList
         private const val SIDELINE_MOVE_WIDTH = 200
         private const val SIDELINE_HEIGHT = 200
         //侧边条屏幕边缘偏移量
-        private const val OFFSET = 20
+        private const val OFFSET_PORTRAIT = 20
+        private const val OFFSET_LANDSCAPE = 0
 
         //是否展示侧边条
         const val SIDELINE = "sideline"
@@ -138,7 +147,7 @@ class SidebarService : Service(), SharedPreferences.OnSharedPreferenceChangeList
         logger.d("moveSideline xChanged=$xChanged yChanged=$yChanged x=$positionX y=$positionY")
         sidelinePositionX = if (positionX > screenWidth / 2) 1 else -1
         layoutParams.apply {
-            x = sidelinePositionX * (screenWidth / 2 - OFFSET)
+            x = sidelinePositionX * (screenWidth / 2 - offset)
             y = layoutParams.y + yChanged
         }
         updateViewLayout()
@@ -151,7 +160,7 @@ class SidebarService : Service(), SharedPreferences.OnSharedPreferenceChangeList
         }
         updateViewLayout()
         setIntSp(SIDELINE_POSITION_X, sidelinePositionX)
-        if (resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT) {
+        if (isPortrait) {
             setIntSp(SIDELINE_POSITION_Y_PORTRAIT, layoutParams.y)
         } else {
             setIntSp(SIDELINE_POSITION_Y_LANDSCAPE, layoutParams.y)
@@ -168,21 +177,24 @@ class SidebarService : Service(), SharedPreferences.OnSharedPreferenceChangeList
         logger.d("showView")
 
         layoutParams.apply {
-            type = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
+            type = LayoutParams.TYPE_APPLICATION_OVERLAY
             width = SIDELINE_WIDTH
             height = SIDELINE_HEIGHT
-            flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
-                    WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
-                    WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS or
-                    WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED
-            privateFlags = WindowManager.LayoutParams.SYSTEM_FLAG_SHOW_FOR_ALL_USERS or
-                    WindowManager.LayoutParams.PRIVATE_FLAG_IS_ROUNDED_CORNERS_OVERLAY or
-                    WindowManager.LayoutParams.PRIVATE_FLAG_USE_BLAST or
-                    WindowManager.LayoutParams.PRIVATE_FLAG_TRUSTED_OVERLAY or
-                    WindowManager.LayoutParams.PRIVATE_FLAG_SYSTEM_APPLICATION_OVERLAY
+            flags = LayoutParams.FLAG_NOT_FOCUSABLE or
+                    LayoutParams.FLAG_NOT_TOUCH_MODAL or
+                    LayoutParams.FLAG_HARDWARE_ACCELERATED
+            privateFlags = LayoutParams.SYSTEM_FLAG_SHOW_FOR_ALL_USERS or
+                    LayoutParams.PRIVATE_FLAG_TRUSTED_OVERLAY or
+                    LayoutParams.PRIVATE_FLAG_USE_BLAST or
+                    LayoutParams.PRIVATE_FLAG_SYSTEM_APPLICATION_OVERLAY
             format = PixelFormat.RGBA_8888
             windowAnimations = android.R.style.Animation_Dialog
         }
+
+        sideLineView.setSystemGestureExclusionRects(
+            listOf(Rect(0, 0, SIDELINE_WIDTH, SIDELINE_HEIGHT))
+        )
+
         updateSidelinePosition()
 
         runCatching {
@@ -197,14 +209,26 @@ class SidebarService : Service(), SharedPreferences.OnSharedPreferenceChangeList
     private fun updateSidelinePosition() {
         sidelinePositionX = sharedPrefs.getInt(SIDELINE_POSITION_X, 1)
         sidelinePositionY =
-            if (resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT)
+            if (isPortrait)
                 sharedPrefs.getInt(SIDELINE_POSITION_Y_PORTRAIT, -screenHeight / 6)
             else
                 sharedPrefs.getInt(SIDELINE_POSITION_Y_LANDSCAPE, -screenHeight / 6)
 
         layoutParams.apply {
-            x = sidelinePositionX * (screenWidth / 2 - OFFSET)
+            x = sidelinePositionX * (screenWidth / 2 - offset)
             y = sidelinePositionY
+            logger.d("updateSidelinePosition: ($x,$y)")
+
+            if (isPortrait) {
+                layoutInDisplayCutoutMode = LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS
+                flags = (flags and LayoutParams.FLAG_LAYOUT_IN_SCREEN.inv()) or
+                    LayoutParams.FLAG_LAYOUT_NO_LIMITS
+            } else {
+                // avoid going into navbar in landscape
+                layoutInDisplayCutoutMode = LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+                flags = (flags and LayoutParams.FLAG_LAYOUT_NO_LIMITS.inv()) or
+                    LayoutParams.FLAG_LAYOUT_IN_SCREEN
+            }
         }
     }
 
