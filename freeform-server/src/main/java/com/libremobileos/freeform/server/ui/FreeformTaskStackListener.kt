@@ -8,7 +8,6 @@ import android.util.Slog
 import android.view.Display
 import android.view.Surface
 import android.window.TaskSnapshot
-import androidx.annotation.RequiresApi
 import com.libremobileos.freeform.server.Debug.dlog
 import com.libremobileos.freeform.server.LMOFreeformServiceHolder
 import com.libremobileos.freeform.server.SystemServiceHolder

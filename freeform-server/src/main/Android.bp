@@ -25,9 +25,6 @@ filegroup {
 java_library_static {
     name: "lmofreeform-server",
     libs: ["services.core"],
-    static_libs: [
-        "androidx.core_core-ktx",
-    ],
     srcs: [
         "java/com/libremobileos/**/*.java",
         "java/com/libremobileos/**/*.kt",
