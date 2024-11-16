@@ -14,6 +14,7 @@ import android.view.WindowManager
 import android.view.WindowManager.LayoutParams
 import android.widget.Toast
 import androidx.appcompat.content.res.AppCompatResources
+import com.android.internal.policy.SystemBarUtils
 import com.libremobileos.sidebar.R
 import com.libremobileos.sidebar.app.SidebarApplication
 import com.libremobileos.sidebar.utils.Logger
@@ -157,6 +158,7 @@ class SidebarService : Service(), SharedPreferences.OnSharedPreferenceChangeList
         logger.d("endMoveSideline")
         layoutParams.apply {
             width = SIDELINE_WIDTH
+            y = constrainY(y)
         }
         updateViewLayout()
         setIntSp(SIDELINE_POSITION_X, sidelinePositionX)
@@ -165,6 +167,22 @@ class SidebarService : Service(), SharedPreferences.OnSharedPreferenceChangeList
         } else {
             setIntSp(SIDELINE_POSITION_Y_LANDSCAPE, layoutParams.y)
         }
+    }
+
+    private fun constrainY(y: Int): Int {
+        // Avoid moving sideline into statusbar or navbar region
+        val sbHeight = SystemBarUtils.getStatusBarHeight(this)
+        val navbarHeight = if (isPortrait) {
+            resources.getDimensionPixelSize(com.android.internal.R.dimen.navigation_bar_height)
+        } else {
+            0
+        }
+        val newY = y.coerceIn(
+            -(screenHeight / 2 - sbHeight - SIDELINE_HEIGHT / 2),
+            screenHeight / 2 - navbarHeight - SIDELINE_HEIGHT / 2
+        )
+        logger.d("constrainY: $y -> $newY")
+        return newY
     }
 
     /**
@@ -216,7 +234,7 @@ class SidebarService : Service(), SharedPreferences.OnSharedPreferenceChangeList
 
         layoutParams.apply {
             x = sidelinePositionX * (screenWidth / 2 - offset)
-            y = sidelinePositionY
+            y = constrainY(sidelinePositionY)
             logger.d("updateSidelinePosition: ($x,$y)")
 
             if (isPortrait) {
