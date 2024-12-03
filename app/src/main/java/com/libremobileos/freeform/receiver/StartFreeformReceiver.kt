@@ -18,6 +18,8 @@ class StartFreeformReceiver : BroadcastReceiver() {
     companion object {
         private const val TAG = "StartFreeformReceiver"
         private const val ACTION = "com.libremobileos.freeform.START_FREEFORM"
+        private const val INITIAL_MAX_WIDTH = 600
+        private const val INITIAL_MAX_HEIGHT = 600
     }
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action == ACTION) {
@@ -32,13 +34,17 @@ class StartFreeformReceiver : BroadcastReceiver() {
                 val screenWidth = context.resources.displayMetrics.widthPixels
                 val screenHeight = context.resources.displayMetrics.heightPixels
                 val screenDensityDpi = context.resources.displayMetrics.densityDpi
+                val freeformWidth = sp.getInt("freeform_width", (screenWidth * 0.7f).roundToInt())
+                    .coerceAtMost(INITIAL_MAX_WIDTH)
+                val freeformHeight = sp.getInt("freeform_height", (screenHeight * 0.4f).roundToInt())
+                    .coerceAtMost(INITIAL_MAX_HEIGHT)
                 LMOFreeformServiceManager.createWindow(
                     packageName,
                     activityName,
                     userId,
                     taskId,
-                    sp.getInt("freeform_width", (screenWidth * 0.7f).roundToInt()),
-                    sp.getInt("freeform_height", (screenHeight * 0.4f).roundToInt()),
+                    freeformWidth,
+                    freeformHeight,
                     sp.getInt("freeform_dpi", screenDensityDpi),
                 )
             }
