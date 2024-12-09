@@ -6,6 +6,7 @@ import android.content.Intent
 import android.content.res.Configuration
 import android.graphics.PixelFormat
 import android.os.Handler
+import android.os.UserHandle
 import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
@@ -74,7 +75,7 @@ class SidebarView(
             putExtra("activityName", appInfo.activityName)
             putExtra("userId", appInfo.userId)
         }
-        context.sendBroadcast(intent)
+        context.sendBroadcastAsUser(intent, UserHandle(UserHandle.USER_CURRENT))
         removeView()
     }
 
