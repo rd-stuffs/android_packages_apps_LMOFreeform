@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">Barra lateral</string>
+
+    <!--SettingsFragment-->
+    <string name="enable_sideline">Usar a Barra lateral</string>
+    <string name="sidebar_label">Barra lateral</string>
+    <string name="sidebar_summary">Abrir apps rapidamente em janelas flutuantes</string>
+    <string name="sidebar_app_setting_label">Apps fixos</string>
+</resources>
