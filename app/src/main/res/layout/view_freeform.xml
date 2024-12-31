@@ -123,24 +123,6 @@
             </LinearLayout>
 
             <LinearLayout
-                android:id="@+id/arrowBack"
-                android:layout_width="0dp"
-                android:layout_height="0dp"
-                android:gravity="center"
-                android:orientation="horizontal"
-                android:tag="arrowBack"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toStartOf="@+id/guideline3"
-                app:layout_constraintStart_toStartOf="@+id/guideline2"
-                app:layout_constraintTop_toTopOf="parent">
-
-                <View
-                    android:layout_width="16dp"
-                    android:layout_height="16dp"
-                    android:background="@drawable/ic_arrow_back" />
-            </LinearLayout>
-
-            <LinearLayout
                 android:id="@+id/rightScale"
                 android:layout_width="@dimen/scale_width"
                 android:layout_height="0dp"

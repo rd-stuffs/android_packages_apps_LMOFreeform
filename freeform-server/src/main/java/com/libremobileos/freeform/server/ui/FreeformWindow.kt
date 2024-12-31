@@ -137,14 +137,6 @@ class FreeformWindow(
             } else {
                 startApp()
             }
-
-            val arrowBack = resourceHolder.getLayoutChildViewByTag<View>(freeformLayout, "arrowBack")
-            if (null == arrowBack) {
-                Slog.e(TAG, "right&rightScale view is null")
-                destroy("onDisplayAdd:backView is null")
-                return@post
-            }
-            arrowBack.setOnClickListener(RightViewClickListener(displayId))
         }
     }
 
